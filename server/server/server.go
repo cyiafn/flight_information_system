@@ -44,7 +44,11 @@ func (s *server) RouteRequest(request []byte) []byte {
 	logs.Info("Received Request Type: %v", requestType)
 	requestDTO := dto.NewRequestDTO(requestType)
 	if requestDTO != nil {
-		rpc.Unmarshal(request, &requestDTO)
+		err := rpc.Unmarshal(request[1:], &requestDTO)
+		if err != nil {
+			logs.Error("Unable to marshal request, err: %v", err)
+			return nil
+		}
 	}
 
 	handler, ok := s.Routes[requestType]
@@ -60,13 +64,26 @@ func (s *server) RouteRequest(request []byte) []byte {
 		Data:       response,
 	}
 
-	resp, err := rpc.Marshal(wrappedResp, dto.GetResponseType(requestType))
+	resp, err := rpc.Marshal(wrappedResp)
 	if err != nil {
 		logs.Warn("error when marshalling, skipping response, err: %v", err)
 		return nil
 	}
+
+	resp = s.addHeaders(requestType, resp)
+
 	logs.Info("response: %v", resp)
 	return resp
+}
+
+func (s *server) addHeaders(requestType dto.RequestType, response []byte) []byte {
+	// add requestID
+	response = s.addResponseTypeHeader(response, dto.GetResponseType(requestType))
+	return response
+}
+
+func (s *server) addResponseTypeHeader(response []byte, responseType dto.ResponseType) []byte {
+	return append([]byte{uint8(responseType)}, response...)
 }
 
 func getUDPPort() int {

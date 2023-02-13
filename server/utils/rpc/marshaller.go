@@ -4,18 +4,16 @@ import (
 	"reflect"
 
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
-	"github.com/cyiafn/flight_information_system/server/dto"
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 	"github.com/pkg/errors"
 )
 
-func Marshal(v any, responseType dto.ResponseType) ([]byte, error) {
+func Marshal(v any) ([]byte, error) {
 	if v == nil {
 		return nil, nil
 	}
 	var response []byte
-	response = append(response, uint8(responseType))
 
 	reflectValue := reflect.ValueOf(v)
 	reflectElem := reflectValue.Elem()
@@ -36,22 +34,23 @@ func Marshal(v any, responseType dto.ResponseType) ([]byte, error) {
 				fieldKind = reflect.TypeOf(field.Interface()).Elem().Kind()
 			}
 			switch fieldKind {
-			case reflect.Int, reflect.Int32, reflect.Uint8, reflect.Float64, reflect.String:
-				err := marshalPrimitive(&response, fieldKind, &field)
+			case reflect.Int, reflect.Int64, reflect.Int32, reflect.Uint8, reflect.Float64, reflect.String:
+				err := marshalPrimitive(&response, fieldKind, field)
 				if err != nil {
 					return nil, err
 				}
-			case reflect.Array:
-				err := marshalArray(&response, &field, fieldKind)
+			case reflect.Slice:
+				err := marshalArray(&response, field, reflectElem.Type().Field(i).Type.Elem().Kind())
 				if err != nil {
 					return nil, err
 				}
 			case reflect.Struct:
-				err := marshalStruct(&response, &field)
+				err := marshalStruct(&response, field)
 				if err != nil {
 					return nil, err
 				}
 			default:
+				logs.Error("unimplemented type: %v", fieldKind)
 				return nil, custom_errors.NewMarshallerError(errors.Errorf("unimplemented type, type: %v", fieldKind))
 			}
 		}
@@ -59,10 +58,12 @@ func Marshal(v any, responseType dto.ResponseType) ([]byte, error) {
 	return response, nil
 }
 
-func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field *reflect.Value) error {
+func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field reflect.Value) error {
 	switch fieldKind {
-	case reflect.Int, reflect.Int64:
+	case reflect.Int64:
 		*response = append(*response, bytes.Int64ToBytes(field.Interface().(int64))...)
+	case reflect.Int:
+		*response = append(*response, bytes.Int64ToBytes(int64(field.Interface().(int)))...)
 	case reflect.Int32:
 		*response = append(*response, bytes.Int32ToBytes(field.Interface().(int32))...)
 	case reflect.Uint8:
@@ -73,12 +74,13 @@ func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field *reflect.V
 		*response = append(*response, []byte(field.Interface().(string))...)
 		*response = append(*response, stringTerminator)
 	default:
+		logs.Error("unimplemented type: %v", fieldKind)
 		return custom_errors.NewMarshallerError(errors.Errorf("unimplemented type"))
 	}
 	return nil
 }
 
-func marshalArray(response *[]byte, field *reflect.Value, elementType reflect.Kind) error {
+func marshalArray(response *[]byte, field reflect.Value, elementType reflect.Kind) error {
 	sizeOfSlice := field.Len()
 	*response = append(*response, bytes.Int64ToBytes(int64(sizeOfSlice))...)
 
@@ -117,43 +119,43 @@ func marshalArray(response *[]byte, field *reflect.Value, elementType reflect.Ki
 	case reflect.Struct:
 		for i := 0; i < sizeOfSlice; i++ {
 			val := field.Index(i)
-			err := marshalStruct(response, &val)
+			err := marshalStruct(response, val)
 			if err != nil {
 				return err
 			}
 		}
 	default:
+		logs.Error("unimplemented type: %v, name: %v", elementType, field.Type().Field(0).Name)
 		return custom_errors.NewMarshallerError(errors.Errorf("unimplemented type"))
 
 	}
 	return nil
 }
 
-func marshalStruct(response *[]byte, reflectValue *reflect.Value) error {
-	reflectElem := reflectValue.Elem()
-
+func marshalStruct(response *[]byte, reflectValue reflect.Value) error {
 	for i := 0; i < reflectValue.NumField(); i++ {
-		field := reflectElem.FieldByName(reflectElem.Type().Field(i).Name)
+		field := reflectValue.FieldByName(reflectValue.Type().Field(i).Name)
 		if field.IsValid() {
-			fieldKind := reflectElem.Type().Field(i).Type.Kind()
+			fieldKind := reflectValue.Type().Field(i).Type.Kind()
 			switch fieldKind {
-			case reflect.Int, reflect.Int32, reflect.Uint8, reflect.Float64, reflect.String:
-				err := marshalPrimitive(response, fieldKind, &field)
+			case reflect.Int, reflect.Int64, reflect.Int32, reflect.Uint8, reflect.Float64, reflect.String:
+				err := marshalPrimitive(response, fieldKind, field)
 				if err != nil {
 					return err
 				}
-			case reflect.Array:
-				err := marshalArray(response, &field, fieldKind)
+			case reflect.Slice:
+				err := marshalArray(response, field, reflectValue.Type().Field(i).Type.Elem().Kind())
 				if err != nil {
 					return err
 				}
 			case reflect.Struct:
-				err := marshalStruct(response, &field)
+				err := marshalStruct(response, field)
 				if err != nil {
 					return err
 				}
 			default:
-				return custom_errors.NewMarshallerError(errors.Errorf("unimplemented type"))
+				logs.Error("unimplemented type: %v", fieldKind)
+				return custom_errors.NewMarshallerError(errors.Errorf("unimplemented type, type: %v", fieldKind))
 			}
 		}
 	}
