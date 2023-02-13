@@ -6,6 +6,7 @@ require (
 	github.com/bytedance/sonic v1.7.1
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.8.1
+	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	go.uber.org/zap v1.24.0
 	gorm.io/driver/postgres v1.4.7
 	gorm.io/gorm v1.24.5

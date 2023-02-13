@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/dto"
@@ -31,12 +32,12 @@ var instance *server
 
 type server struct {
 	UDPListener            net.Listener
-	Routes                 map[dto.RequestType]func(request any) (any, error)
+	Routes                 map[dto.RequestType]func(ctx context.Context, request any) (any, error)
 	Mode                   serverMode
 	DuplicateRequestFilter *duplicate_request.Filter
 }
 
-func Boot(routes map[dto.RequestType]func(request any) (any, error), atMostOnceEnabled bool) {
+func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any, error), atMostOnceEnabled bool) {
 	instance = &server{
 		Routes: routes,
 		Mode:   utils.TernaryOperator(atMostOnceEnabled, atMostOnceServerMode, atLeastOnceServerMode),
@@ -63,7 +64,7 @@ func SpinDown() {
 	logs.Info("Goodbye!")
 }
 
-func (s *server) RouteRequest(request []byte) []byte {
+func (s *server) RouteRequest(ctx context.Context, request []byte) []byte {
 	requestID := getRequestID(request)
 	if s.Mode == atMostOnceServerMode && !s.DuplicateRequestFilter.IsAllowed(string(requestID)) {
 		logs.Warn("RequestID: %s was repeated, aborting request", requestID)
@@ -89,7 +90,7 @@ func (s *server) RouteRequest(request []byte) []byte {
 		return nil
 	}
 
-	response, err := handler(requestDTO)
+	response, err := handler(ctx, requestDTO)
 
 	wrappedResp := &dto.Response{
 		StatusCode: status_code.GetStatusCode(err),
@@ -142,4 +143,8 @@ func getRequestID(request []byte) []byte {
 
 func getRequestBody(request []byte) []byte {
 	return request[requestTypeBytesLength+shortIDBytesLength:]
+}
+
+func GetIPAddr(ctx context.Context) string {
+	return ctx.Value("addr").(string)
 }

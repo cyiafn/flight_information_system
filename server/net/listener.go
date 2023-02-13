@@ -1,6 +1,7 @@
 package net
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -24,7 +25,7 @@ type Listener interface {
 	StopListening()
 }
 
-func NewUDPListener(port int, requestHandler func(request []byte) []byte) Listener {
+func NewUDPListener(port int, requestHandler func(ctx context.Context, request []byte) []byte) Listener {
 	return &UDPListener{
 		listener:       nil,
 		Port:           port,
@@ -37,7 +38,7 @@ type UDPListener struct {
 	terminateChan chan struct{}
 
 	Port           int
-	RequestHandler func(request []byte) []byte
+	RequestHandler func(ctx context.Context, request []byte) []byte
 }
 
 func (u *UDPListener) StartListening() {
@@ -79,7 +80,9 @@ func (u *UDPListener) StartListening() {
 
 		if bytes.IsEmpty(buf) {
 			currentRequest = append(currentRequest, buf...)
-			go u.handleIncomingData(currentRequest, addr)
+
+			ctx := context.WithValue(context.Background(), "addr", addr.String())
+			go u.handleIncomingData(ctx, currentRequest, addr)
 			currentRequest = nil
 			prevAddress = nil
 		} else {
@@ -98,8 +101,8 @@ func (u *UDPListener) StartListening() {
 	}
 }
 
-func (u *UDPListener) handleIncomingData(buf []byte, addr net.Addr) {
-	resp := u.RequestHandler(buf)
+func (u *UDPListener) handleIncomingData(ctx context.Context, buf []byte, addr net.Addr) {
+	resp := u.RequestHandler(ctx, buf)
 	if resp == nil {
 		logs.Warn("no reply to user as response is nil")
 		return
@@ -114,7 +117,6 @@ func (u *UDPListener) handleIncomingData(buf []byte, addr net.Addr) {
 	if err != nil {
 		logs.Error("unable to end reply, err: %v", err)
 	}
-
 }
 
 func (u *UDPListener) StopListening() {
