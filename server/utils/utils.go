@@ -39,3 +39,10 @@ func GracefulShutdown(cleanup ...func()) {
 	}()
 
 }
+
+func TernaryOperator[T any](cond bool, ifTrue, ifFalse T) T {
+	if cond {
+		return ifTrue
+	}
+	return ifFalse
+}

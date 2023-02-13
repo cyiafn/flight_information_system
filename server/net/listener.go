@@ -3,6 +3,7 @@ package net
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/utils/bytes"
@@ -14,6 +15,8 @@ const (
 	udpAddress = "localhost"
 
 	defaultByteBufferSize = 512
+
+	defaultServerTimeout = 5 * time.Second
 )
 
 type Listener interface {
@@ -54,6 +57,7 @@ func (u *UDPListener) StartListening() {
 
 	var prevAddress net.Addr
 	var currentRequest []byte
+	firstRequestStart := time.Now()
 
 	for {
 		buf := make([]byte, defaultByteBufferSize)
@@ -68,6 +72,7 @@ func (u *UDPListener) StartListening() {
 
 		if prevAddress == nil {
 			prevAddress = addr
+			firstRequestStart = time.Now()
 		}
 
 		logs.Info("Received request of len %v from addr %s, data: %v", n, addr.String(), buf)
@@ -82,6 +87,10 @@ func (u *UDPListener) StartListening() {
 				logs.Error("previous IP address did not match current IP address, discarding data due to potential corruption")
 				prevAddress = nil
 				currentRequest = nil
+			} else if firstRequestStart.Add(defaultServerTimeout).Before(time.Now()) {
+				logs.Error("Received another packet after default server timeout, discarding data due to potential corruption")
+				prevAddress = nil
+				currentRequest = nil
 			} else {
 				currentRequest = append(currentRequest, buf...)
 			}
@@ -91,11 +100,21 @@ func (u *UDPListener) StartListening() {
 
 func (u *UDPListener) handleIncomingData(buf []byte, addr net.Addr) {
 	resp := u.RequestHandler(buf)
+	if resp == nil {
+		logs.Warn("no reply to user as response is nil")
+		return
+	}
 
 	_, err := u.listener.WriteTo(resp, addr)
 	if err != nil {
-		logs.Error("unable to reply ")
+		logs.Error("unable to reply, err: %v", err)
+		return
 	}
+	_, err = u.listener.WriteTo(make([]byte, defaultByteBufferSize), addr)
+	if err != nil {
+		logs.Error("unable to end reply, err: %v", err)
+	}
+
 }
 
 func (u *UDPListener) StopListening() {

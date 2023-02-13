@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
-	"github.com/cyiafn/flight_information_system/server/dto"
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 	"github.com/pkg/errors"
@@ -25,10 +24,6 @@ const (
 var (
 	stringTerminator = []byte("\000")[0]
 )
-
-func GetRequestType(request []byte) dto.RequestType {
-	return dto.RequestType(request[0])
-}
 
 func Unmarshal(request []byte, v any) error {
 	var err error

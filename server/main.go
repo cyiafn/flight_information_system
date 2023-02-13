@@ -15,5 +15,5 @@ func main() {
 	defer utils.HandlePanic()
 	utils.GracefulShutdown(server.SpinDown)
 
-	server.Boot(routes)
+	server.Boot(routes, true)
 }
