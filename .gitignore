@@ -2,14 +2,14 @@
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+server/*.exe
+server/*.exe~
+server/*.dll
+server/*.so
+server/*.dylib
 
 # Test binary, built with `go test -c`
-*.test
+server/server/*.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -18,49 +18,49 @@
 # vendor/
 
 # Go workspace file
-go.work
+server/go.work
 
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+server/.vscode/*
+server/!.vscode/settings.json
+server/!.vscode/tasks.json
+server/!.vscode/launch.json
+server/!.vscode/extensions.json
+server/!.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
-.history/
+server/.history/
 
 # Built Visual Studio Code Extensions
-*.vsix
+server/*.vsix
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
+server/.idea/**/workspace.xml
+server/.idea/**/tasks.xml
+server/.idea/**/usage.statistics.xml
+server/.idea/**/dictionaries
+server/.idea/**/shelf
 
 # AWS User-specific
-.idea/**/aws.xml
+server/.idea/**/aws.xml
 
 # Generated files
-.idea/**/contentModel.xml
+server/.idea/**/contentModel.xml
 
 # Sensitive or high-churn files
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
+server/.idea/**/dataSources/
+server/.idea/**/dataSources.ids
+server/.idea/**/dataSources.local.xml
+server/.idea/**/sqlDataSources.xml
+server/.idea/**/dynamic.xml
+server/.idea/**/uiDesigner.xml
+server/.idea/**/dbnavigator.xml
 
 # Gradle
-.idea/**/gradle.xml
-.idea/**/libraries
+server/.idea/**/gradle.xml
+server/.idea/**/libraries
 
 # Gradle and Maven with auto-import
 # When using Gradle or Maven with auto-import, you should exclude module files,
@@ -85,7 +85,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-out/
+server/out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
