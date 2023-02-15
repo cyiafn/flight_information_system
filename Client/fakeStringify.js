@@ -2,8 +2,9 @@ function fakeStringify(value) {
     let result = ""; // Store the results as a String
     let attributes = []; //Create a list to store the attributes.
 
-    // Stringify will result in attribute-value attribute-value -> TO-DO Come up with another attribute1,attribute2,value,value
-
+    // Stringify will result in attribute-value attribute-value -> 
+    // TO-DO Come up with another attribute1,attribute2,value,value
+    
     switch (typeof value) { //Check the value types...
       case "string":
         attributes.push("string");
