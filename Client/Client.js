@@ -55,11 +55,12 @@ class UDPClient {
         console.log('Client Error');
     }
     
-    //handleMessage(msg,rinfo) // TO-DO Method to create handle Request or Response...
+    // TO-DO Method to create handle Request or Response...
+    //handleMessage(msg,rinfo) 
    
     
 
-    send(msg, isIdempotent) //Send Method to cover both Idempotent and Non-Idempotent
+    sendRequest(msg, isIdempotent = true) //Send Method to cover both Idempotent and Non-Idempotent
     {
         const id = this.requestId++;
         let data = Buffer.from(Stringify({"id" : id, "type" : "request", "data" : msg})); // Converts the message into buffer data... TO-DO Create a Stringify Function to convert to {"code" : xxx , "data" : {}}
@@ -71,11 +72,28 @@ class UDPClient {
 
         this.client.send(data, data.length, this.getPort(), this.getAddress(), (err, bytes) => {
             if (err) {
-              console.log(`Error sending response: ${err}`);
+              console.log(`Error sending message: ${err}`);
             } else {
               console.log(`Sent ${bytes} bytes to server`);
+              if(!isIdempotent){
+                setTimeout(()=> {
+                    this.pendingRequests.delete(id);
+                }, this.timeout);
+              }
             }
           });
+    }
+
+    sendResponse(id,msg) {
+        const data = Buffer.from(Stringify({"id" : id, "type" : "response", "data" : msg}))
+        this.client.send(data,this.getPort(), this.getAddress(), (err, bytes) =>{
+            if (err) {
+                console.log(`Error sending response: ${err}`);
+            }
+            else{
+                console.log(`Sent ${bytes} to server`);
+            }
+        });
     }
 
 }
