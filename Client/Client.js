@@ -62,7 +62,7 @@ class UDPClient {
     send(msg, isIdempotent) //Send Method to cover both Idempotent and Non-Idempotent
     {
         const id = this.requestId++;
-        let data = Buffer.from(Stringify(msg)); // Converts the message into buffer data... TO-DO Create a Stringify Function to convert to {"code" : xxx , "data" : {}}
+        let data = Buffer.from(Stringify({"id" : id, "type" : "request", "data" : msg})); // Converts the message into buffer data... TO-DO Create a Stringify Function to convert to {"code" : xxx , "data" : {}}
         
         if (isIdempotent)
         {
@@ -81,4 +81,4 @@ class UDPClient {
 }
 
 //Testing if fake Stringify works...
-console.log(Stringify({"Data" : [123,41,21,2]}))
+console.log((Stringify({ 'Id' : "1234", "type" : "request", 'Data' : [123,41,21,2] })));
