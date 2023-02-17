@@ -1,6 +1,5 @@
 
 const dgram = require('dgram');
-const { buffer } = require('stream/consumers');
 const fakeStringify  = require('./fakeStringify.js');
 const retrieveDataTypes = require('./retrieveDataTypes.js');
 // Connect to Server Via UDP Connection
@@ -19,7 +18,7 @@ class UDPClient {
             this.handleError(); 
         })
         
-        this.client.on('message', (message,rinfo) => {
+        this.client.on('message', (message,rinfo) => { //client.on enables client to listen for message and execute handleMessage()
             this.handleMessage(msg,rinfo);
         })
     }
@@ -76,7 +75,7 @@ class UDPClient {
             if (err) {
               console.log(`Error sending message: ${err}`);
             } else {
-              console.log(`Sent ${bytes} bytes to server`);
+              console.log(`Sent ${bytes} bytes to server`); //If successful Client will be notified...
               if(!isIdempotent){
                 setTimeout(()=> {
                     this.pendingRequests.delete(id); 
@@ -95,7 +94,7 @@ class UDPClient {
                 console.log(`Error sending response: ${err}`);
             }
             else{
-                console.log(`Sent ${bytes} to server`);
+                console.log(`Sent ${bytes} to server`); //If successful Client will be notified...
             }
         });
     }
