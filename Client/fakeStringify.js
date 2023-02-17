@@ -1,28 +1,31 @@
 function fakeStringify(value) {
     let result = ""; // Store the results as a String
-    let attributes = []; //Create a list to store the attributes.
+    let attributes = ""; //Create a list to store the attributes.
 
     // Stringify will result in attribute-value attribute-value -> 
     // TO-DO Come up with another attribute1,attribute2,value,value
     
     switch (typeof value) { //Check the value types...
       case "string":
-        attributes.push("string");
+       
+        result+= '"'
         result += value;
+        result += '"';
+      
         break;
       case "number":
-        attributes.push("number");
+        
         result += value.toString();
         break;
       case "boolean":
-        attributes.push("boolean");
+        
         result += value ? "true" : "false";
         break;
       case "object":
         if (value === null) {
           result += "null";
         } else if (Array.isArray(value)) {
-          attributes.push("array");
+          
           result += "[";
           for (let i = 0; i < value.length; i++) {
             result += fakeStringify(value[i]);
@@ -31,27 +34,35 @@ function fakeStringify(value) {
             }
           }
           result += "]";
+          
         } else {
-          attributes.push("array");
+          
           result += "{";
           let keys = Object.keys(value);
           for (let i = 0; i < keys.length; i++) {
             let key = keys[i];
             let val = value[key];
+          
             result += `"${key}":${fakeStringify(val)}`;
             if (i < keys.length - 1) {
               result += ",";
             }
           }
           result += "}";
+          
         }
         break;
       case "undefined":
-        attributes.push("undefined");
+        result += "undefined";
+        
         break;
     }
     
-    return (attributes.toString() + "-" + result );
+
+    
+    return (result);
 }
+
+
 
 module.exports = fakeStringify;
