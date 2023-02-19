@@ -35,10 +35,11 @@ class UDPClient {
             console.log(`test Client listening on ${this.address}:${this.receivePort}`);
         });
 
+        this.client.on('message', () => {
+            console.log(`test Client received message from ${this.address}:${this.receivePort}`);
+        });
+
     }
-    // handleMessage(msg: string, rinfo: dgram.RemoteInfo) {
-    //     throw new Error('Method not implemented.');
-    // }
 
 
     //UDPClient get Methods
@@ -83,7 +84,7 @@ class UDPClient {
         // 6[4,0,0,0,0,0] | payload
 
         //Converts the string into buffer data with concat of headers
-        const payload = Buffer.from(attr.toString() + "|" + str + "\0");
+        const payload = Buffer.from("|"+ attr.toString() + "|" + str + "\0");
         let bufferData = Buffer.concat([Buffer.from(header), payload]);
         this.pendingRequests.set(id, {bufferData, attempts: 0})
 
@@ -134,7 +135,7 @@ class UDPClient {
         // Converts the message object into array
         const {str, attr} = marshall(msg); 
         // 0 = "string" | 1 = "number" | 2 = "boolean" | 3 = "array" | 4 = "object"
-        const payload = Buffer.from(attr.toString() + "|" + str + "\0");
+        const payload = Buffer.from("|"+attr.toString() + "|" + str + "\0");
         let bufferData = Buffer.concat([Buffer.from(header), payload]);
         this.client.send(bufferData,0, bufferData.length, this.sendPort, this.address, (err : Error | null, bytes : number) =>{
             if (err) {
@@ -159,7 +160,8 @@ class UDPClient {
 
 let id = 123;
 let msg = "hello";
-let msg2 = "Can i book this?"
+let msg2 = marshall({"Booking":1234, "seat":23, "Name" : "Eric"})
+let msg3 = marshall({"Booking":1234, "seat":[23,24,25], "Name" : "Mr."})
 // let header = craftHeaders(100);
 // let data = {data : [1,2,3,4,5]}
 // const {str, attr} = marshall(msg);  // Converts the message object into array
@@ -168,5 +170,5 @@ let msg2 = "Can i book this?"
 
 let client = new UDPClient('127.0.0.1', 3333, 4444);
 client.sendRequest(msg);
-// client.sendRequest(msg2)
-// client.sendRequest("Booking Flight: 1234");
+client.sendRequest(msg2)
+client.sendRequest(msg3);
