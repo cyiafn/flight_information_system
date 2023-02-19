@@ -1,7 +1,6 @@
 
 import dgram from 'dgram';
 import { Buffer } from 'buffer';
-
 import { marshall } from './marshalling';
 import { retrieveDataTypes } from './retrieveDataTypes';
 import { craftHeaders } from './headers';
@@ -22,7 +21,7 @@ class UDPClient {
     timeout: number;
     constructor(address:string, sendPort:number, receivePort : number)  // Specify the port number (agreed upon) and local ip address of the server.
     {
-        this.address = address; //IP Address of SErver
+        this.address = address; //IP Address of Server
         this.sendPort = sendPort; //Sending Port Number of Client
         this.receivePort = receivePort; //Listening Port of Client
         this.client = dgram.createSocket('udp4');
@@ -76,7 +75,6 @@ class UDPClient {
     public sendRequest(msg:string) 
     {
         let id = this.requestId;
-        console.log(id);
         let header = craftHeaders(this.requestId++);
         // Converts the message object into array
         const {str, attr} = marshall(msg); 
@@ -107,15 +105,27 @@ class UDPClient {
                     clearTimeout(timeOutId);
                     this.pendingRequests.delete(id);
                     
+                    
                     // check if there are any more pending requests before closing the socket..
                     if (this.pendingRequests.size === 0) {
                       // close the socket
+                      
                       this.client.close(() => {
                         console.log('Socket is closed');
                       });
                     }
                   });
             }
+        });
+
+        // Send an empty packet once a request is completed...
+        const emptyBuffer = Buffer.alloc(0);
+        this.client.send(emptyBuffer, 0, 0, this.sendPort, this.address, (err) => {
+        if (err) {
+            console.error('Error sending empty packet:', err);
+        } else {
+            console.log('Empty packet sent successfully');
+        }
         });
     }
 
@@ -158,5 +168,5 @@ let msg2 = "Can i book this?"
 
 let client = new UDPClient('127.0.0.1', 3333, 4444);
 client.sendRequest(msg);
-client.sendRequest(msg2)
-client.sendRequest("Booking Flight: 1234");
+// client.sendRequest(msg2)
+// client.sendRequest("Booking Flight: 1234");
