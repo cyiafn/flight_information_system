@@ -22,12 +22,12 @@ class UDPClient {
     timeout: number;
     constructor(address:string, sendPort:number, receivePort : number)  // Specify the port number (agreed upon) and local ip address of the server.
     {
-        this.address = address;
-        this.sendPort = sendPort;
-        this.receivePort = receivePort;
+        this.address = address; //IP Address of SErver
+        this.sendPort = sendPort; //Sending Port Number of Client
+        this.receivePort = receivePort; //Listening Port of Client
         this.client = dgram.createSocket('udp4');
         this.requestId = 0; //Tracking of Request ID
-        this.pendingRequests = new Map();
+        this.pendingRequests = new Map(); //Storing of Pending Requests
         this.timeout = 5000; //Time out when no reply in 0.5 seconds  
 
         this.client.bind(this.receivePort, this.address);
@@ -61,13 +61,12 @@ class UDPClient {
 
     handleError() //Method to handle error -> TO-DO Handle Specific Error by their error code
     {
-        console.log('Client Error');
+        console.log('Client Encountered an Error');
     }
     
     // TO-DO Method to create handle Request or Response...
     handleMessage(msg:string, rinfo: RemoteInfo) {
         console.log("ACK");
-        this.client.close();
     }
 
 
@@ -76,7 +75,8 @@ class UDPClient {
     //Send Method to cover both Idempotent and Non-Idempotent
     public sendRequest(msg:string) 
     {
-
+        let id = this.requestId;
+        console.log(id);
         let header = craftHeaders(this.requestId++);
         // Converts the message object into array
         const {str, attr} = marshall(msg); 
@@ -87,6 +87,9 @@ class UDPClient {
         //Converts the string into buffer data with concat of headers
         const payload = Buffer.from(attr.toString() + "|" + str + "\0");
         let bufferData = Buffer.concat([Buffer.from(header), payload]);
+        this.pendingRequests.set(id, {bufferData, attempts: 0})
+
+        
 
         this.client.send(bufferData, 0, bufferData.length, this.sendPort, this.address, (err: Error | null, bytes : number) => {
             if (err) {
@@ -102,8 +105,16 @@ class UDPClient {
                 this.client.on('message', (message, rinfo) => {
                     console.log("ack" + message);
                     clearTimeout(timeOutId);
-                    this.client.close()
-                });
+                    this.pendingRequests.delete(id);
+                    
+                    // check if there are any more pending requests before closing the socket..
+                    if (this.pendingRequests.size === 0) {
+                      // close the socket
+                      this.client.close(() => {
+                        console.log('Socket is closed');
+                      });
+                    }
+                  });
             }
         });
     }
@@ -121,7 +132,15 @@ class UDPClient {
             }
             else{
                 console.log(`Sent ${bytes} to server`); //If successful Client will be notified...
-                            
+                this.client.on('message', (message, rinfo) => {
+                    console.log("ack" + message);
+                    this.pendingRequests.delete(id);
+                    
+                    // close the client socket
+                    this.client.close(() => {
+                        console.log('Socket is closed');
+                      });
+                  });  
             }
         })
     }
@@ -130,6 +149,7 @@ class UDPClient {
 
 let id = 123;
 let msg = "hello";
+let msg2 = "Can i book this?"
 // let header = craftHeaders(100);
 // let data = {data : [1,2,3,4,5]}
 // const {str, attr} = marshall(msg);  // Converts the message object into array
@@ -138,3 +158,5 @@ let msg = "hello";
 
 let client = new UDPClient('127.0.0.1', 3333, 4444);
 client.sendRequest(msg);
+client.sendRequest(msg2)
+client.sendRequest("Booking Flight: 1234");
