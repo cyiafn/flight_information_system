@@ -5,7 +5,7 @@ export function marshall(data:unknown):any {
   // Store the results as a String
   let strRes = ""; 
   // Crate a list to store the attibutes
-  let attrRes = [];
+  let attrRes = [] as string[];
 
 
   switch (typeof data) { //Check the data types...
