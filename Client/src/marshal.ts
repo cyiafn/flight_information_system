@@ -1,31 +1,22 @@
-
-
-
-export function marshall(data:unknown):any {
+export function marshal(data:unknown):any {
   // Store the results as a String
   let strRes = ""; 
-  // Crate a list to store the attibutes
-  let attrRes = [] as string[];
-
-
-  switch (typeof data) { //Check the data types...
+  
+  // Check the data types...
+  switch (typeof data) { 
     case "string":
-      
-      strRes += "" + data + ""
 
-     attrRes.push("0");
+      strRes += "" + data + ""
 
       break;
     case "number":
       
       strRes += data.toString();
-     attrRes.push("1");
 
       break;
     case "boolean":
       
       strRes += data ? "true" : "false";
-     attrRes.push("2");
 
       break;
     case "object":
@@ -33,31 +24,29 @@ export function marshall(data:unknown):any {
       if (data === null) {
         strRes += "null";
       } 
+
       // If the data is array
       else if (Array.isArray(data)) {
-       attrRes.push("3");
         strRes += data.length;
         strRes += "[";
         for (let i = 0; i < data.length; i++) {
-          const {str, attr} = marshall(data[i]);
+          const {str} = marshal(data[i]);
           strRes += str;
-          attrRes.push(...attr);
-          if (i < data.length - 1) {
+         
+          if (i < data.length - 1)
             strRes += ",";
-          }
         }
         strRes += "]";
       } 
+
       // If the data is Object
       else {
-       attrRes.push("4");
         strRes += "{";
         let keys = Object.keys(data);
         for(const key of keys) {
           strRes += key + ':'
-          const {str, attr} = marshall(data[key as keyof typeof data]);
+          const {str} = marshal(data[key as keyof typeof data]);
           strRes += str;
-          attrRes.push(...attr);
         }
         strRes += "}";
       }
@@ -69,5 +58,5 @@ export function marshall(data:unknown):any {
       
       break;
   }
-  return { str: strRes, attr : attrRes as string[] }
+  return strRes
 }
