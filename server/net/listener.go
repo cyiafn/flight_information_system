@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/cyiafn/flight_information_system/server/logs"
-	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 )
 
 var _ Listener = (*UDPListener)(nil)
@@ -16,8 +14,6 @@ const (
 	udpAddress = "localhost"
 
 	defaultByteBufferSize = 512
-
-	defaultServerTimeout = 5 * time.Second
 )
 
 type Listener interface {
@@ -25,7 +21,7 @@ type Listener interface {
 	StopListening()
 }
 
-func NewUDPListener(port int, requestHandler func(ctx context.Context, request []byte) []byte) Listener {
+func NewUDPListener(port int, requestHandler func(ctx context.Context, request []byte) ([]byte, bool)) Listener {
 	return &UDPListener{
 		listener:       nil,
 		Port:           port,
@@ -38,7 +34,7 @@ type UDPListener struct {
 	terminateChan chan struct{}
 
 	Port           int
-	RequestHandler func(ctx context.Context, request []byte) []byte
+	RequestHandler func(ctx context.Context, request []byte) ([]byte, bool)
 }
 
 func (u *UDPListener) StartListening() {
@@ -56,10 +52,10 @@ func (u *UDPListener) StartListening() {
 	u.terminateChan = make(chan struct{})
 	logs.Info("Good day, listener booted up.")
 
-	var prevAddress net.Addr
-	var currentRequest []byte
-	firstRequestStart := time.Now()
+	u.listen()
+}
 
+func (u *UDPListener) listen() {
 	for {
 		buf := make([]byte, defaultByteBufferSize)
 		n, addr, err := u.listener.ReadFrom(buf)
@@ -71,38 +67,18 @@ func (u *UDPListener) StartListening() {
 			continue
 		}
 
-		if prevAddress == nil {
-			prevAddress = addr
-			firstRequestStart = time.Now()
-		}
-
 		logs.Info("Received request of len %v from addr %s, data: %v", n, addr.String(), buf)
 
-		if bytes.IsEmpty(buf) {
-			currentRequest = append(currentRequest, buf...)
-
-			ctx := context.WithValue(context.Background(), "addr", addr.String())
-			go u.handleIncomingData(ctx, currentRequest, addr)
-			currentRequest = nil
-			prevAddress = nil
-		} else {
-			if prevAddress.String() != addr.String() {
-				logs.Error("previous IP address did not match current IP address, discarding data due to potential corruption")
-				prevAddress = nil
-				currentRequest = nil
-			} else if firstRequestStart.Add(defaultServerTimeout).Before(time.Now()) {
-				logs.Error("Received another packet after default server timeout, discarding data due to potential corruption")
-				prevAddress = nil
-				currentRequest = nil
-			} else {
-				currentRequest = append(currentRequest, buf...)
-			}
-		}
+		ctx := context.WithValue(context.Background(), "addr", addr.String())
+		go u.handleIncomingData(ctx, buf, addr)
 	}
 }
 
 func (u *UDPListener) handleIncomingData(ctx context.Context, buf []byte, addr net.Addr) {
-	resp := u.RequestHandler(ctx, buf)
+	resp, processed := u.RequestHandler(ctx, buf)
+	if !processed {
+		return
+	}
 	if resp == nil {
 		logs.Warn("no reply to user as response is nil")
 		return
