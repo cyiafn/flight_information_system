@@ -45,7 +45,7 @@ func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any
 
 	if atMostOnceEnabled {
 		instance.Mode = atMostOnceServerMode
-		duplicate_request.NewFilter()
+		instance.DuplicateRequestFilter = duplicate_request.NewFilter()
 	} else {
 		instance.Mode = atLeastOnceServerMode
 	}
