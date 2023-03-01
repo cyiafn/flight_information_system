@@ -42,7 +42,7 @@ func (r *requestBuffer) ProcessRequest(ctx context.Context, payload []byte) (*re
 }
 
 func (r *requestBuffer) StartCleanUp() {
-	ticker := time.NewTicker(cleanUpDuration)
+	ticker := time.NewTicker(2 * time.Second)
 
 	go func() {
 		for {

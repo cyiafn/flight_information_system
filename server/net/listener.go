@@ -13,7 +13,7 @@ var _ Listener = (*UDPListener)(nil)
 const (
 	udpAddress = "localhost"
 
-	defaultByteBufferSize = 512
+	DefaultByteBufferSize = 512
 )
 
 type Listener interface {
@@ -21,7 +21,7 @@ type Listener interface {
 	StopListening()
 }
 
-func NewUDPListener(port int, requestHandler func(ctx context.Context, request []byte) ([]byte, bool)) Listener {
+func NewUDPListener(port int, requestHandler func(ctx context.Context, request []byte) ([][]byte, bool)) Listener {
 	return &UDPListener{
 		listener:       nil,
 		Port:           port,
@@ -34,7 +34,7 @@ type UDPListener struct {
 	terminateChan chan struct{}
 
 	Port           int
-	RequestHandler func(ctx context.Context, request []byte) ([]byte, bool)
+	RequestHandler func(ctx context.Context, request []byte) ([][]byte, bool)
 }
 
 func (u *UDPListener) StartListening() {
@@ -57,7 +57,7 @@ func (u *UDPListener) StartListening() {
 
 func (u *UDPListener) listen() {
 	for {
-		buf := make([]byte, defaultByteBufferSize)
+		buf := make([]byte, DefaultByteBufferSize)
 		n, addr, err := u.listener.ReadFrom(buf)
 		if err != nil {
 			if err.Error() == fmt.Sprintf("read udp [::]:%v: use of closed network connection", u.Port) {
@@ -84,15 +84,15 @@ func (u *UDPListener) handleIncomingData(ctx context.Context, buf []byte, addr n
 		return
 	}
 
-	_, err := u.listener.WriteTo(resp, addr)
-	if err != nil {
-		logs.Error("unable to reply, err: %v", err)
-		return
+	for _, packet := range resp {
+		packet := packet
+		_, err := u.listener.WriteTo(packet, addr)
+		if err != nil {
+			logs.Error("unable to reply, err: %v", err)
+			return
+		}
 	}
-	_, err = u.listener.WriteTo(make([]byte, defaultByteBufferSize), addr)
-	if err != nil {
-		logs.Error("unable to end reply, err: %v", err)
-	}
+
 }
 
 func (u *UDPListener) StopListening() {

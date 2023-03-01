@@ -1,14 +1,13 @@
 package main
 
 import (
+	"github.com/cyiafn/flight_information_system/server/database"
 	"github.com/cyiafn/flight_information_system/server/server"
 	"github.com/cyiafn/flight_information_system/server/utils"
 )
 
 func init() {
-	//if err := orm.Init(); err != nil {
-	//	panic(err)
-	//}
+	database.PopulateFlights()
 }
 
 func main() {

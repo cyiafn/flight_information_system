@@ -6,10 +6,13 @@ type StatusCodeType uint8
 
 const (
 	Success StatusCodeType = iota + 1
-	BusinessLogicError
-	DatabaseError
-	NetworkError
+
+	BusinessLogicGenericError
 	MarshallerError
+
+	NoMatchForSourceAndDestination
+	NoSuchFlightIdentifier
+	InsufficientNumberOfAvailableSeats
 )
 
 func GetStatusCode(err error) StatusCodeType {
@@ -19,6 +22,13 @@ func GetStatusCode(err error) StatusCodeType {
 	switch err.(type) {
 	case *custom_errors.MarshallerError:
 		return MarshallerError
+	case *custom_errors.NoMatchForSourceAndDestinationError:
+		return NoMatchForSourceAndDestination
+	case *custom_errors.NoSuchFlightIdentifierError:
+		return NoSuchFlightIdentifier
+	case *custom_errors.InsufficientNumberOfAvailableSeatsError:
+		return InsufficientNumberOfAvailableSeats
+	default:
+		return BusinessLogicGenericError
 	}
-	return Success
 }

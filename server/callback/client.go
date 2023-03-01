@@ -2,13 +2,16 @@ package callback
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/dto"
+	"github.com/cyiafn/flight_information_system/server/dto/status_code"
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/net"
 	"github.com/cyiafn/flight_information_system/server/server"
 	"github.com/cyiafn/flight_information_system/server/utils"
+	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 	"github.com/cyiafn/flight_information_system/server/utils/collections"
 	"github.com/cyiafn/flight_information_system/server/utils/predicates"
 	"github.com/cyiafn/flight_information_system/server/utils/rpc"
@@ -18,6 +21,7 @@ import (
 )
 
 type Client[T comparable] struct {
+	sync.RWMutex
 	NotifiableClients map[T]*collections.Set[string]
 }
 
@@ -35,6 +39,8 @@ type workerPoolJob struct {
 func (c *Client[T]) Subscribe(ctx context.Context, item T, expireDuration time.Duration) {
 	addr := server.GetIPAddr(ctx)
 
+	c.Lock()
+	defer c.Unlock()
 	if _, ok := c.NotifiableClients[item]; !ok {
 		c.NotifiableClients[item] = collections.NewSet[string]()
 	}
@@ -48,10 +54,14 @@ func (c *Client[T]) cleanup(item T, addr string, expireDuration time.Duration) {
 
 	<-timer.C
 	logs.Info("removing address: %s for item: %s from subscription", addr, utils.DumpJSON(item))
+	c.Lock()
+	defer c.Unlock()
 	c.NotifiableClients[item].MustRemove(addr)
 }
 
 func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error {
+	c.RLock()
+	defer c.RUnlock()
 	if _, ok := c.NotifiableClients[item]; !ok {
 		logs.Error("no registered addresses for %s", utils.DumpJSON(item))
 		return errors.Errorf("no registered addresses")
@@ -59,7 +69,11 @@ func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error
 
 	respBody, err := rpc.Marshal(payload)
 	if err != nil {
-		return err
+		logs.Warn("unable to marshal payload for callback, err: %v", err)
+		respBody, _ = rpc.Marshal(&dto.Response{
+			StatusCode: status_code.Success,
+			Data:       nil,
+		})
 	}
 
 	fullPayload := c.addHeaders(respType, respBody)
@@ -94,9 +108,19 @@ func makeWorkerPoolJobs(addrs []string, payload []byte) []workerPoolJob {
 }
 
 func (c *Client[T]) addHeaders(respType dto.ResponseType, body []byte) []byte {
+	body = c.addTotalPacketToHeader(body, 1)
+	body = c.addPacketNoToHeader(body, 1)
 	body = c.addRequestID(body)
 	body = c.addResponseTypeHeader(respType, body)
 	return body
+}
+
+func (c *Client[T]) addPacketNoToHeader(response []byte, packetNo int64) []byte {
+	return append(bytes.Int64ToBytes(packetNo), response...)
+}
+
+func (c *Client[T]) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
+	return append(bytes.Int64ToBytes(totalPacket), response...)
 }
 
 func (c *Client[T]) addResponseTypeHeader(respType dto.ResponseType, body []byte) []byte {

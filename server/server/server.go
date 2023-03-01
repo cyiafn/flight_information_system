@@ -4,12 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/cyiafn/flight_information_system/server/custom_errors"
 	"github.com/cyiafn/flight_information_system/server/dto"
 	"github.com/cyiafn/flight_information_system/server/dto/status_code"
 	"github.com/cyiafn/flight_information_system/server/duplicate_request"
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/net"
 	"github.com/cyiafn/flight_information_system/server/utils"
+	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 	"github.com/cyiafn/flight_information_system/server/utils/rpc"
 )
 
@@ -69,7 +71,7 @@ func SpinDown() {
 	logs.Info("Goodbye!")
 }
 
-func (s *server) RouteRequest(ctx context.Context, request []byte) ([]byte, bool) {
+func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bool) {
 	req, complete := s.RequestBuffer.ProcessRequest(ctx, request)
 	if !complete {
 		logs.Info("Request is not complete, waiting for all packets: %s", utils.DumpJSON(req))
@@ -107,20 +109,53 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([]byte, bool
 
 	resp, err := rpc.Marshal(wrappedResp)
 	if err != nil {
-		logs.Warn("error when marshalling, skipping response, err: %v", err)
-		return nil, false
+		logs.Warn("error when marshalling, err: %v", err)
+		resp, _ = rpc.Marshal(&dto.Response{
+			StatusCode: status_code.GetStatusCode(custom_errors.NewMarshallerError(err)),
+			Data:       nil,
+		})
 	}
 
-	resp = s.addHeaders(requestType, []byte(req.RequestID), resp)
+	res := s.splitPayloadForSending(requestType, []byte(req.RequestID), resp)
 
 	logs.Info("response: %v", resp)
-	return resp, true
+	return res, true
 }
 
-func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, response []byte) []byte {
-	response = s.addRequestIDToHeader(requestID, response)
+func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID []byte, payload []byte) [][]byte {
+	output := make([][]byte, 0)
+	it := 0
+	for i := 0; i < len(payload)+net.DefaultByteBufferSize-s.getTotalBytesInHeader(); i += net.DefaultByteBufferSize - s.getTotalBytesInHeader() {
+		mxSize := utils.TernaryOperator(len(payload) < i+net.DefaultByteBufferSize-s.getTotalBytesInHeader(), len(payload), i+net.DefaultByteBufferSize-s.getTotalBytesInHeader())
+		output[it] = payload[i:mxSize]
+		it += 1
+	}
+
+	for i := range output {
+		output[i] = s.addHeaders(requestType, requestID, int64(i), int64(len(output)), output[i])
+	}
+
+	return output
+}
+
+func (s *server) getTotalBytesInHeader() int {
+	return requestTypeBytesLength + shortIDBytesLength + currentPacketBytesLength + totalPacketsByteLength
+}
+
+func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, packetNo int64, totalPacket int64, response []byte) []byte {
+	response = s.addTotalPacketToHeader(response, totalPacket)
+	response = s.addPacketNoToHeader(response, packetNo)
+	response = s.addRequestIDToHeader(response, requestID)
 	response = s.addResponseTypeHeader(response, dto.GetResponseType(requestType))
 	return response
+}
+
+func (s *server) addPacketNoToHeader(response []byte, packetNo int64) []byte {
+	return append(bytes.Int64ToBytes(packetNo), response...)
+}
+
+func (s *server) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
+	return append(bytes.Int64ToBytes(totalPacket), response...)
 }
 
 func (s *server) addRequestIDToHeader(response []byte, requestID []byte) []byte {
