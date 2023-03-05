@@ -1,62 +1,66 @@
-export function marshal(data:unknown):any {
-  // Store the results as a String
-  let strRes = ""; 
-  
-  // Check the data types...
-  switch (typeof data) { 
-    case "string":
+import { Buffer } from "buffer";
+import {
+  instanceOfCreateFlightRequest,
+  instanceOfGetFlightIdentifiersRequest,
+  instanceOfGetFlightInformationRequest,
+  instanceOfMakeSeatReservationRequest,
+  instanceOfMonitorSeatUpdatesRequest,
+  instanceOfUpdateFlightPriceRequest,
+} from "./interfaces";
 
-      strRes += "" + data + ""
+export function marshal(data: any): any {
+  let requestBuffer;
+  if (instanceOfGetFlightIdentifiersRequest(data)) {
+    const lengthReq =
+      data.SourceLocation.length + data.DestinationLocation.length + 2;
+    requestBuffer = Buffer.alloc(lengthReq);
+    requestBuffer.write(data.SourceLocation);
+    requestBuffer.write("\0", data.SourceLocation.length);
+    requestBuffer.write(
+      data.DestinationLocation,
+      data.SourceLocation.length + 1
+    );
+    requestBuffer.write("\0", lengthReq - 1);
+  } else if (instanceOfGetFlightInformationRequest(data)) {
+    requestBuffer = Buffer.alloc(4);
+    requestBuffer.writeUint32LE(data.FlightIdentifier);
+  } else if (instanceOfMakeSeatReservationRequest(data)) {
+    requestBuffer = Buffer.alloc(8);
+    requestBuffer.writeUint32LE(data.FlightIdentifier);
+    requestBuffer.writeUint32LE(data.SeatsToReserve, 4);
+  } else if (instanceOfMonitorSeatUpdatesRequest(data)) {
+    requestBuffer = Buffer.alloc(12);
+    requestBuffer.writeUint32LE(data.FlightIdentifier);
+    requestBuffer.writeBigUInt64LE(
+      BigInt(data.LengthOfMonitorIntervalInSeconds),
+      4
+    );
+  } else if (instanceOfUpdateFlightPriceRequest(data)) {
+    requestBuffer = Buffer.alloc(12);
+    requestBuffer.writeUint32LE(data.FlightIdentifier);
+    requestBuffer.writeFloatLE(data.NewPrice, 4);
+  } else if (instanceOfCreateFlightRequest(data)) {
+    const lengthReq =
+      data.SourceLocation.length +
+      data.DestinationLocation.length +
+      2 +
+      8 +
+      8 +
+      4;
+    let start = data.SourceLocation.length;
+    requestBuffer = Buffer.alloc(lengthReq);
+    requestBuffer.write(data.SourceLocation);
+    requestBuffer.write("\0", start);
 
-      break;
-    case "number":
-      
-      strRes += data.toString();
+    requestBuffer.write(data.DestinationLocation, ++start);
+    requestBuffer.write("\0", (start += data.DestinationLocation.length));
 
-      break;
-    case "boolean":
-      
-      strRes += data ? "true" : "false";
+    requestBuffer.writeBigUInt64LE(BigInt(data.DepartureTime), ++start);
 
-      break;
-    case "object":
+    requestBuffer.writeFloatLE(data.Airfare, (start += 8));
 
-      if (data === null) {
-        strRes += "null";
-      } 
-
-      // If the data is array
-      else if (Array.isArray(data)) {
-        strRes += data.length;
-        strRes += "[";
-        for (let i = 0; i < data.length; i++) {
-          const {str} = marshal(data[i]);
-          strRes += str;
-         
-          if (i < data.length - 1)
-            strRes += ",";
-        }
-        strRes += "]";
-      } 
-
-      // If the data is Object
-      else {
-        strRes += "{";
-        let keys = Object.keys(data);
-        for(const key of keys) {
-          strRes += key + ':'
-          const {str} = marshal(data[key as keyof typeof data]);
-          strRes += str;
-        }
-        strRes += "}";
-      }
-
-      break;
-    case "undefined":
-
-      strRes += "undefined";
-      
-      break;
+    requestBuffer.writeUInt32LE(data.TotalAvailableSeats, (start += 8));
   }
-  return strRes
+
+  return requestBuffer;
 }
