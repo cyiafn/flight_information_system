@@ -24,7 +24,7 @@ func SendData(data []byte, addr string) error {
 }
 
 func makeConn(addr string) (net.Conn, error) {
-	callbackConn, err := net.Dial("UDP", addr)
+	callbackConn, err := net.Dial("udp", addr)
 	if err != nil {
 		logs.Error("unable to dial UDP, err: %v", err)
 		return nil, err

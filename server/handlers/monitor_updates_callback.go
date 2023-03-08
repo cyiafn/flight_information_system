@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
 	"github.com/cyiafn/flight_information_system/server/database"
 	"github.com/cyiafn/flight_information_system/server/utils/predicates"
@@ -36,9 +35,7 @@ func MonitorSeatUpdates(ctx context.Context, request any) (any, error) {
 
 func handleMonitorSeatUpdatesCallback(flight *dao.Flight) {
 	res := &dto.MonitorSeatUpdatesCallbackResponse{TotalAvailableSeats: flight.TotalAvailableSeats}
-	fmt.Printf("Notifying\n")
-	err := monitorSeatUpdatesCallbackClient.Notify(flight.FlightIdentifier, dto.MonitorSeatUpdatesCallbackType, res)
-	fmt.Printf("Notified\n")
+	err := monitorSeatUpdatesCallbackClient.Notify(flight.FlightIdentifier, dto.MonitorSeatUpdatesCallbackType, res, nil)
 	if err != nil {
 		logs.Warn("failure to deliver callback for 1 or more clients: %v", err)
 	}

@@ -53,12 +53,14 @@ func (c *Client[T]) cleanup(item T, addr string, expireDuration time.Duration) {
 	c.NotifiableClients[item].MustRemove(addr)
 }
 
-func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error {
+func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any, err error) error {
 	if _, ok := c.NotifiableClients[item]; !ok {
 		return nil
 	}
 
-	respBody, err := rpc.Marshal(payload)
+	wrappedResp := &dto.Response{StatusCode: status_code.GetStatusCode(err), Data: payload}
+
+	respBody, err := rpc.Marshal(wrappedResp)
 	if err != nil {
 		logs.Warn("unable to marshal payload for callback, err: %v", err)
 		respBody, _ = rpc.Marshal(&dto.Response{
@@ -68,6 +70,7 @@ func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error
 	}
 
 	fullPayload := c.addHeaders(respType, respBody)
+	logs.Info("Response Callback: %v", fullPayload)
 	load := worker_pools.Load(func(job workerPoolJob) error {
 		return net.SendData(job.Payload, job.Addr)
 	},
@@ -75,7 +78,7 @@ func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error
 		10,
 	)
 
-	if ok := predicates.One(load, func(a error) bool { return a != nil }); !ok {
+	if ok := predicates.One(load, func(a error) bool { return a != nil }); ok {
 		logs.Warn("Not all callbacks completed successfully, errs: %s", utils.DumpJSON(load))
 		for _, err := range load {
 			err := err

@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="aaeecd31-e980-49f5-9a72-67068b75aabb" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/callback/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/callback/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/monitor_updates_callback.go" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/monitor_updates_callback.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/net/callback_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/net/callback_client.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
