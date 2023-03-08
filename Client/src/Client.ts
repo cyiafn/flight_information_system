@@ -64,7 +64,7 @@ export class UDPClient {
 
   public sendMultipleRequests(dto: any, requestType: number) {
     // If dto is q4
-    if (requestType === 4)
+    if (requestType === 5)
       this.monitorTimeOut = dto.LengthOfMonitorIntervalInSeconds;
 
     // 26 bytes header message max 499 Bytes
@@ -96,7 +96,7 @@ export class UDPClient {
   }
 
   private callback(expireTime: number) {
-    console.log("In callback");
+    console.log(`In callback, expiring in ${expireTime * 1000} seconds`);
     setTimeout(() => {
       console.log("No more monitoring");
       this.client.close();
@@ -104,7 +104,6 @@ export class UDPClient {
 
     this.client.on("message", (msg, rinfo) => {
       // unmarshal message
-      console.log(rinfo);
       this.receiveResponse(msg);
     });
   }
@@ -124,7 +123,6 @@ export class UDPClient {
     );
     // Converts the message object into array
     const packet = Buffer.concat([header, payload], 512);
-    console.log(this.client);
     this.client.send(
       packet,
       0,
@@ -143,9 +141,9 @@ export class UDPClient {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
-              for (const hex of msg) console.log(hex);
+              // for (const hex of msg) console.log(hex);
 
-              console.log("");
+              // console.log("");
 
               this.receiveResponse(msg);
               // this.client.close(() => {
