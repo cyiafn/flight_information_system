@@ -175,25 +175,6 @@ export class UDPClient {
         }
       }
     );
-
-    // Send an empty packet once a request is completed...
-    const emptyBuffer = Buffer.alloc(512);
-    this.client.send(
-      emptyBuffer,
-      0,
-      emptyBuffer.length,
-      this.sendPort,
-      this.address,
-      (err) => {
-        if (err) {
-          console.error("Error sending empty packet:", err);
-        } else {
-          console.log(
-            `Empty packet ${emptyBuffer.byteLength} bytes sent successfully`
-          );
-        }
-      }
-    );
   }
 
   public sendResponse(
