@@ -144,11 +144,8 @@ export class UDPClient {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
-              const testData = msg.toString("hex").split(" ");
-              console.log(testData);
-              for (const hex of testData) {
-                process.stdout.write(hex);
-              }
+              for (const hex of msg) console.log(hex);
+
               console.log("");
 
               this.receiveResponse(msg);
