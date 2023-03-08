@@ -139,7 +139,7 @@ export class UDPClient {
         } else {
           console.log(`Sent ${bytes} bytes to server`);
 
-          if (requestType === 4) this.callback(this.monitorTimeOut);
+          if (requestType === 5) this.callback(this.monitorTimeOut);
           else {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);

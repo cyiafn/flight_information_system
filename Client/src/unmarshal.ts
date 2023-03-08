@@ -83,7 +83,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
 
       departureTime = buffer.readBigUInt64LE(curLen);
 
-      airfare = buffer.readFloatLE((curLen += 8));
+      airfare = buffer.readDoubleLE((curLen += 8));
       totalAvailableSeats = buffer.readUint32LE((curLen += 8));
 
       result = {
