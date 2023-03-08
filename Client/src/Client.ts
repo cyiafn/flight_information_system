@@ -6,10 +6,8 @@ import {
   createRequestId,
   deconstructHeaders,
 } from "./headers";
-import { PendingRequest, RequestType } from "./interfaces";
+import { PendingRequest, ResponseType } from "./interfaces";
 import { unmarshal } from "./unmarshal";
-import { exit } from "process";
-import { request } from "http";
 
 // Connect to Server Via UDP Connection
 // port = 8080
@@ -93,6 +91,7 @@ export class UDPClient {
     const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
     // display the payload information here
     console.log(payload);
+    return payload;
   }
 
   private callback(expireTime: number) {
@@ -115,6 +114,7 @@ export class UDPClient {
     packetNo: number,
     noOfPackets: number
   ) {
+    let callback = "";
     const header = constructHeaders(
       requestType,
       this.requestId,
@@ -136,32 +136,32 @@ export class UDPClient {
           console.log(`Sent ${bytes} bytes to server`);
 
           this.receivePort = this.client.address().port;
-          if (requestType === 5) this.callback(this.monitorTimeOut);
-          else {
-            this.client.on("message", (msg) => {
-              clearTimeout(closeSocketTimeout);
-              clearTimeout(timeOutId);
-              // for (const hex of msg) console.log(hex);
+          this.client.on("message", (msg) => {
+            clearTimeout(closeSocketTimeout);
+            clearTimeout(timeOutId);
+            // for (const hex of msg) console.log(hex);
 
-              // console.log("");
+            // console.log("");
 
-              this.receiveResponse(msg);
-              // this.client.close(() => {
-              //   console.log(`${msg}\n CLOSED SOCKET`);
-              // });
+            callback = this.receiveResponse(msg) as string;
+            this.client.close(() => {
+              console.log(`${msg}\n CLOSED SOCKET`);
             });
+          });
 
-            const closeSocketTimeout = setTimeout(() => {
-              this.client.close(() => {
-                console.log("Socket is closed");
-              });
-            }, 4999);
+          const closeSocketTimeout = setTimeout(() => {
+            this.client.close(() => {
+              console.log("Socket is closed");
+            });
+          }, 4999);
 
-            const timeOutId = setTimeout(() => {
-              this.client = dgram.createSocket("udp4");
-              this.sendRequest(payload, requestType, packetNo, noOfPackets);
-            }, this.timeout);
-          }
+          const timeOutId = setTimeout(() => {
+            this.client = dgram.createSocket("udp4");
+            this.sendRequest(payload, requestType, packetNo, noOfPackets);
+          }, this.timeout);
+
+          if (requestType === 5 && callback === "Monitor Success")
+            this.callback(this.monitorTimeOut);
         }
       }
     );

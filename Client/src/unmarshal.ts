@@ -16,7 +16,7 @@ export function unmarshal(buffer: Buffer, requestType: Number) {
       return "No flight identifier";
     case StatusCode.InsufficientNumberOfAvailableSeats:
       return "Insufficient number of available seats";
-    default:
+    case StatusCode.Success:
       return determineResponseType(data, requestType);
   }
 }
@@ -55,6 +55,10 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
 
     case ResponseType.MakeSeatReservationResponseType:
       // No Response Body
+      break;
+
+    case ResponseType.MonitorSeatUpdateCallbackType:
+      return "Monitor Success";
       break;
 
     case ResponseType.MonitorSeatUpdatesResponseType:
