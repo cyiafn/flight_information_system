@@ -2,7 +2,6 @@ package callback
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/dto"
@@ -20,7 +19,6 @@ import (
 )
 
 type Client[T comparable] struct {
-	sync.RWMutex
 	NotifiableClients map[T]*collections.Set[string]
 }
 
@@ -38,8 +36,6 @@ type workerPoolJob struct {
 func (c *Client[T]) Subscribe(ctx context.Context, item T, expireDuration time.Duration) {
 	addr := server.GetIPAddr(ctx)
 
-	c.Lock()
-	defer c.Unlock()
 	if _, ok := c.NotifiableClients[item]; !ok {
 		c.NotifiableClients[item] = collections.NewSet[string]()
 	}
@@ -54,14 +50,10 @@ func (c *Client[T]) cleanup(item T, addr string, expireDuration time.Duration) {
 
 	<-timer.C
 	logs.Info("removing address: %s for item: %s from subscription", addr, utils.DumpJSON(item))
-	c.Lock()
-	defer c.Unlock()
 	c.NotifiableClients[item].MustRemove(addr)
 }
 
 func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error {
-	c.RLock()
-	defer c.RUnlock()
 	if _, ok := c.NotifiableClients[item]; !ok {
 		return nil
 	}
