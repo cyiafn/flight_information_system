@@ -43,6 +43,7 @@ func (s *Set[T]) Remove(a T) error {
 		return errors.Errorf("element does not exist")
 	}
 	s.MustRemove(a)
+	return nil
 }
 
 func (s *Set[T]) MustRemove(a T) {
