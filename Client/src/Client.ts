@@ -91,8 +91,7 @@ export class UDPClient {
 
     // If data is more than 499 Bytes, send in another packet
     let lengthPayload = payload.length;
-
-    const totalPackets = Math.ceil(lengthPayload / 499);
+    const totalPackets = Math.ceil(lengthPayload / 486);
 
     for (let i = 1; i <= totalPackets; i++) {
       this.sendRequest(payload, requestType, i, totalPackets);
@@ -100,12 +99,12 @@ export class UDPClient {
   }
 
   private receiveResponse(buffer: Buffer) {
-    const header = deconstructHeaders(buffer.subarray(0, 13));
+    const header = deconstructHeaders(buffer);
     let tempBuffer;
     while (header.noOfPackets !== header.packetNo) {
       //continue to listen
     }
-    const payload = demarshal(buffer.subarray(13, 512), header.requestType);
+    const payload = demarshal(buffer.subarray(26, 512), header.requestType);
     // display the payload information here
     console.log(payload);
   }
