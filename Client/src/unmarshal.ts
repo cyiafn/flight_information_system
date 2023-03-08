@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import { ResponseType, StatusCode } from "./interfaces";
+import { convertToDateTime, findStrFromBuffer } from "./utility";
 
 export function unmarshal(buffer: Buffer, requestType: Number) {
   const statusCode = buffer[0];
@@ -23,8 +24,8 @@ export function unmarshal(buffer: Buffer, requestType: Number) {
 
 function determineResponseType(buffer: Buffer, responseType: Number) {
   let result;
-  let totalAvailableSeats: number, airfare: number, flightIdentifier: number;
-  let departureTime: BigInt;
+  let totalAvailableSeats: number, airfare: string, flightIdentifier: number;
+  let departureTime: string;
 
   switch (responseType) {
     case ResponseType.PingResponseType:
@@ -39,27 +40,36 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
         flightIds.push(buffer.readInt32LE(eSize));
         eSize += 4;
       }
-      result = { FlightIdentifiers: flightIds };
+      console.log(
+        `These are the following Flight Identifier(s) from the given Source and Destination Location:`
+      );
+      for (const [idx, id] of flightIds.entries()) {
+        if (idx === flightIds.length - 1) console.log(`${id}`);
+        console.log(`${id}, `);
+      }
       break;
 
     case ResponseType.GetFlightInformationResponseType:
-      departureTime = buffer.readBigInt64LE();
-      airfare = buffer.readDoubleLE(8);
+      departureTime = convertToDateTime(buffer.readBigInt64LE());
+      airfare = buffer.readDoubleLE(8).toFixed(2);
       totalAvailableSeats = buffer.readInt32LE(16);
-      result = {
-        DepartureTime: departureTime,
-        Airfare: airfare,
-        TotalAvailableSeats: totalAvailableSeats,
-      };
+
+      console.log(
+        `The Departure for this Flight Identifier is ${departureTime}.`
+      );
+      console.log(`The Airfare cost ${airfare}.`);
+      console.log(
+        `The Total Available Seats for this Flight is ${totalAvailableSeats}.`
+      );
       break;
 
     case ResponseType.MakeSeatReservationResponseType:
       // No Response Body
+      console.log("Seats have been successfully reserved");
       break;
 
     case ResponseType.MonitorSeatUpdatesResponseType:
-      return "Monitor Success";
-      break;
+      return ResponseType.MonitorSeatUpdatesResponseType;
 
     case ResponseType.MonitorSeatUpdatesCallbackType:
       totalAvailableSeats = buffer.readInt32LE();
@@ -81,9 +91,9 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
         findStrFromBuffer(buffer.subarray(curLen, buffer.length));
       curLen += totalLen2;
 
-      departureTime = buffer.readBigInt64LE(curLen);
+      departureTime = convertToDateTime(buffer.readBigInt64LE(curLen));
 
-      airfare = buffer.readDoubleLE((curLen += 8));
+      airfare = buffer.readDoubleLE((curLen += 8)).toFixed(2);
       totalAvailableSeats = buffer.readInt32LE((curLen += 8));
 
       result = {
@@ -94,21 +104,29 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
         Airfare: airfare,
         TotalAvailableSeats: totalAvailableSeats,
       };
+
+      console.log(
+        `The flight price for Flight Identifier ${flightIdentifier} flying from ${sourceLocation} to ${destinationLocation} at ${departureTime} have been updated.`
+      );
+      console.log(`The updated Airfare cost is ${airfare}.`);
+      console.log(
+        `The Total Available Seats for this Flight is ${totalAvailableSeats}.`
+      );
+
       break;
 
     case ResponseType.CreateFlightResponseType:
       flightIdentifier = buffer.readInt32LE();
-      return { FlightIdentifier: flightIdentifier };
+      console.log(
+        `The Flight Identifier ${flightIdentifier} have been created:`
+      );
+      break;
   }
-
-  return result;
 }
 
-function findStrFromBuffer(buffer: Buffer) {
-  let idx = 0;
-  for (const byte of buffer.values()) {
-    if (byte == 0x00) break;
-    idx++;
-  }
-  return { totalLen: idx + 1, str: buffer.toString("utf-8", 0, idx) };
-}
+const buffer = Buffer.alloc(20);
+buffer.writeBigInt64LE(BigInt(1678283107));
+buffer.writeDoubleLE(1425.2, 8);
+buffer.writeInt32LE(20, 16);
+
+determineResponseType(buffer, 103);

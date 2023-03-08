@@ -86,14 +86,10 @@ export class UDPClient {
 
   private receiveResponse(buffer: Buffer) {
     const header = deconstructHeaders(buffer);
-    let tempBuffer;
-    while (header.noOfPackets !== header.packetNo) {
-      //continue to listen
-    }
+
     const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
-    // display the payload information here
-    console.log(payload);
-    return payload;
+    if (typeof payload === "string") console.log(payload);
+    else return payload;
   }
 
   //Send Method to cover both Idempotent and Non-Idempotent
@@ -130,10 +126,12 @@ export class UDPClient {
             // for (const hex of msg) console.log(hex);
             // console.log("");
 
-            const callback = this.receiveResponse(msg) as string;
+            const callback = this.receiveResponse(
+              msg
+            ) as ResponseType.MonitorSeatUpdatesResponseType;
 
             // Dealing with callback
-            if (callback === "Monitor Success") {
+            if (callback === 105) {
               setTimeout(() => {
                 console.log("No more monitoring");
                 this.monitorMode = false;
@@ -156,42 +154,6 @@ export class UDPClient {
             this.client = dgram.createSocket("udp4");
             this.sendRequest(payload, requestType, packetNo, noOfPackets);
           }, this.timeout);
-        }
-      }
-    );
-  }
-
-  public sendResponse(
-    id: string,
-    msg: string,
-    packetNo: number,
-    noOfPackets: number
-  ) {
-    let header = constructHeaders(101, id, packetNo, noOfPackets);
-    // Converts the message object into array
-    const str = marshal(msg);
-    const payload = Buffer.from(str + "\0");
-    let bufferData = Buffer.concat([Buffer.from(header), payload]);
-    this.client.send(
-      bufferData,
-      0,
-      bufferData.length,
-      this.sendPort,
-      this.address,
-      (err: Error | null, bytes: number) => {
-        if (err) {
-          console.log(`Error sending response: ${err}`);
-        } else {
-          console.log(`Sent ${bytes} to server`); //If successful Client will be notified...
-          this.client.on("message", (message, rinfo) => {
-            console.log("Response\n", message);
-            this.pendingRequests.delete(id);
-
-            // close the client socket
-            // this.client.close(() => {
-            //     console.log('Socket is closed');
-            //   });
-          });
         }
       }
     );
