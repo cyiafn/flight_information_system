@@ -72,7 +72,7 @@ func newRequest(ctx context.Context, payload []byte) *request {
 		TotalPackets:  totalPackets,
 		Body:          make([][]byte, totalPackets),
 	}
-	req.Body[currentPacket] = getRequestBody(payload)
+	req.Body[currentPacket-1] = getRequestBody(payload)
 	return req
 }
 
