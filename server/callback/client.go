@@ -16,7 +16,6 @@ import (
 	"github.com/cyiafn/flight_information_system/server/utils/predicates"
 	"github.com/cyiafn/flight_information_system/server/utils/rpc"
 	"github.com/cyiafn/flight_information_system/server/utils/worker_pools"
-	"github.com/pkg/errors"
 	"github.com/teris-io/shortid"
 )
 
@@ -63,8 +62,7 @@ func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any) error
 	c.RLock()
 	defer c.RUnlock()
 	if _, ok := c.NotifiableClients[item]; !ok {
-		logs.Error("no registered addresses for %s", utils.DumpJSON(item))
-		return errors.Errorf("no registered addresses")
+		return nil
 	}
 
 	respBody, err := rpc.Marshal(payload)
