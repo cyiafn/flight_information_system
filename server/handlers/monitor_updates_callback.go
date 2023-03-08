@@ -37,7 +37,7 @@ func MonitorSeatUpdates(ctx context.Context, request any) (any, error) {
 func handleMonitorSeatUpdatesCallback(flight *dao.Flight) {
 	res := &dto.MonitorSeatUpdatesCallbackResponse{TotalAvailableSeats: flight.TotalAvailableSeats}
 	fmt.Printf("Notifying\n")
-	err := monitorSeatUpdatesCallbackClient.Notify(flight.FlightIdentifier, dto.MonitorSeatUpdatesResponseType, res)
+	err := monitorSeatUpdatesCallbackClient.Notify(flight.FlightIdentifier, dto.MonitorSeatUpdatesCallbackType, res)
 	fmt.Printf("Notified\n")
 	if err != nil {
 		logs.Warn("failure to deliver callback for 1 or more clients: %v", err)

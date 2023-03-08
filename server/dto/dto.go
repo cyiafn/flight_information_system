@@ -28,6 +28,10 @@ const (
 	CreateFlightResponseType
 )
 
+const (
+	MonitorSeatUpdatesCallbackType = iota + 201
+)
+
 var (
 	requestToResponseMap = map[RequestType]ResponseType{
 		PingRequestType:                 PingResponseType,
