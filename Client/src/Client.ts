@@ -144,7 +144,7 @@ export class UDPClient {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
-              console.log(msg.readIntBE(0, msg.length));
+              console.log(msg.toString("decimal"));
 
               this.receiveResponse(msg);
               this.client.close(() => {
