@@ -118,7 +118,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
     case ResponseType.CreateFlightResponseType:
       flightIdentifier = buffer.readInt32LE();
       console.log(
-        `The Flight Identifier ${flightIdentifier} have been created:`
+        `The Flight Identifier ${flightIdentifier} have been created.`
       );
       break;
   }
