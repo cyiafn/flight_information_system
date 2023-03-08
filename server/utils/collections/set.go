@@ -48,7 +48,7 @@ func (s *Set[T]) Remove(a T) error {
 
 func (s *Set[T]) MustRemove(a T) {
 	s.Lock()
-	defer s.Lock()
+	defer s.Unlock()
 	delete(s.data, a)
 }
 
@@ -57,7 +57,7 @@ func (s *Set[T]) ToList() []T {
 		return nil
 	}
 	s.RLock()
-	s.RUnlock()
+	defer s.RUnlock()
 
 	output := make([]T, len(s.data))
 
