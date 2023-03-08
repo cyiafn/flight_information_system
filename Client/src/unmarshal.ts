@@ -126,10 +126,3 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       break;
   }
 }
-
-// const buffer = Buffer.alloc(20);
-// buffer.writeBigInt64LE(BigInt(1678283107));
-// buffer.writeDoubleLE(1425.2, 8);
-// buffer.writeInt32LE(20, 16);
-
-// determineResponseType(buffer, 103);
