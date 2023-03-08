@@ -144,9 +144,10 @@ export class UDPClient {
             // console.log("");
 
             callback = this.receiveResponse(msg) as string;
-            this.client.close(() => {
-              console.log(`${msg}\n CLOSED SOCKET`);
-            });
+            if (callback !== "Monitor Success")
+              this.client.close(() => {
+                console.log(`${msg}\n CLOSED SOCKET`);
+              });
           });
 
           const closeSocketTimeout = setTimeout(() => {

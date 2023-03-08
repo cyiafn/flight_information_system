@@ -61,7 +61,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       return "Monitor Success";
       break;
 
-    case ResponseType.MonitorSeatUpdateCallbackType:
+    case ResponseType.MonitorSeatUpdatesCallbackType:
       totalAvailableSeats = buffer.readUInt32LE();
       result = {
         TotalAvailableSeats: totalAvailableSeats,

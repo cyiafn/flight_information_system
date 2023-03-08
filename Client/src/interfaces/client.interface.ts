@@ -30,7 +30,7 @@ export enum ResponseType {
   MonitorSeatUpdatesResponseType = 105,
   UpdateFlightPriceResponseType = 106,
   CreateFlightResponseType = 107,
-  MonitorSeatUpdateCallbackType = 201,
+  MonitorSeatUpdatesCallbackType = 201,
 }
 
 export type GetFlightIdentifiersRequest = {
