@@ -123,6 +123,12 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 }
 
 func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID []byte, payload []byte) [][]byte {
+	if len(payload) == 0 {
+		output := make([][]byte, 1)
+		output[0] = make([]byte, 0)
+		output[0] = s.addHeaders(requestType, requestID, 1, 1, output[0])
+		return output
+	}
 	output := make([][]byte, 0)
 	it := 0
 	for i := 0; i < len(payload)+net.DefaultByteBufferSize-s.getTotalBytesInHeader(); i += net.DefaultByteBufferSize - s.getTotalBytesInHeader() {
