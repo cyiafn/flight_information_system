@@ -42,7 +42,8 @@ export async function userInterface() {
       break;
   }
 
-  client.sendMultipleRequests(inputs, option);
+  // plus 1 because first one is ping
+  client.sendMultipleRequests(inputs, option + 1);
 
   return inputs;
 }
