@@ -7,7 +7,7 @@ import {
   deconstructHeaders,
 } from "./headers";
 import { PendingRequest, RequestType } from "./interfaces";
-import { demarshal } from "./demarshal";
+import { unmarshal } from "./unmarshal";
 import { exit } from "process";
 import { request } from "http";
 
@@ -89,13 +89,12 @@ export class UDPClient {
   }
 
   private receiveResponse(buffer: Buffer) {
-    console.log(buffer);
     const header = deconstructHeaders(buffer);
     let tempBuffer;
     while (header.noOfPackets !== header.packetNo) {
       //continue to listen
     }
-    const payload = demarshal(buffer.subarray(26, 512), header.requestType);
+    const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
     // display the payload information here
     console.log(payload);
   }
@@ -108,7 +107,7 @@ export class UDPClient {
     }, expireTime * 1000);
 
     this.client.on("message", (msg) => {
-      // demarshal message
+      // unmarshal message
       this.receiveResponse(msg);
     });
   }
@@ -145,6 +144,7 @@ export class UDPClient {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
+              console.log(msg.readIntBE(0, msg.length));
 
               this.receiveResponse(msg);
               this.client.close(() => {

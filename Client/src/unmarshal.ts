@@ -5,7 +5,7 @@ import {
   UpdateFlightPriceResponse,
 } from "./interfaces";
 
-export function demarshal(buffer: Buffer, requestType: Number) {
+export function unmarshal(buffer: Buffer, requestType: Number) {
   const statusCode = buffer[0];
   const data = buffer.subarray(1, buffer.length);
 
