@@ -23,14 +23,8 @@ func SendData(data []byte, addr string) error {
 	return err
 }
 
-func makeConn(addr string) (*net.UDPConn, error) {
-	callbackClientAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		logs.Error("unable to resolve UDP address, err: %v", err)
-		return nil, err
-	}
-
-	callbackConn, err := net.DialUDP("UDP", nil, callbackClientAddr)
+func makeConn(addr string) (net.Conn, error) {
+	callbackConn, err := net.Dial("UDP", addr)
 	if err != nil {
 		logs.Error("unable to dial UDP, err: %v", err)
 		return nil, err
@@ -38,7 +32,7 @@ func makeConn(addr string) (*net.UDPConn, error) {
 	return callbackConn, nil
 }
 
-func sendPayload(conn *net.UDPConn, data []byte) error {
+func sendPayload(conn net.Conn, data []byte) error {
 	_, err := conn.Write(data)
 	if err != nil {
 		logs.Error("error sending payload: %v", err)
