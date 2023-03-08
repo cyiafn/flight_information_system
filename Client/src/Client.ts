@@ -144,6 +144,7 @@ export class UDPClient {
             // console.log("");
 
             callback = this.receiveResponse(msg) as string;
+            console.log(callback);
             if (callback !== "Monitor Success")
               this.client.close(() => {
                 console.log(`${msg}\n CLOSED SOCKET`);
