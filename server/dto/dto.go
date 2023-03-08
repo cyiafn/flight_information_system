@@ -9,12 +9,34 @@ type RequestType uint8
 type ResponseType uint8
 
 const (
-	Ping RequestType = iota + 1
+	PingRequestType RequestType = iota + 1
+	GetFlightIdentifiersRequestType
+	GetFlightInformationRequestType
+	MakeSeatReservationRequestType
+	MonitorSeatUpdatesRequestType
+	UpdateFlightPriceRequestType
+	CreateFlightRequestType
+)
+
+const (
+	PingResponseType ResponseType = iota + 101
+	GetFlightIdentifiersResponseType
+	GetFlightInformationResponseType
+	MakeSeatReservationResponseType
+	MonitorSeatUpdatesResponseType
+	UpdateFlightPriceResponseType
+	CreateFlightResponseType
 )
 
 var (
 	requestToResponseMap = map[RequestType]ResponseType{
-		1: 101,
+		PingRequestType:                 PingResponseType,
+		GetFlightIdentifiersRequestType: GetFlightIdentifiersResponseType,
+		GetFlightInformationRequestType: GetFlightInformationResponseType,
+		MakeSeatReservationRequestType:  MakeSeatReservationResponseType,
+		MonitorSeatUpdatesRequestType:   MonitorSeatUpdatesResponseType,
+		UpdateFlightPriceRequestType:    UpdateFlightPriceResponseType,
+		CreateFlightRequestType:         CreateFlightResponseType,
 	}
 )
 
@@ -33,9 +55,80 @@ type Response struct {
 
 func NewRequestDTO(requestType RequestType) any {
 	switch requestType {
-	case 1:
+	case PingRequestType:
 		return nil
+	case GetFlightIdentifiersRequestType:
+		return &GetFlightIdentifiersRequest{}
+	case GetFlightInformationRequestType:
+		return &GetFlightInformationRequest{}
+	case MakeSeatReservationRequestType:
+		return &MakeSeatReservationRequest{}
+	case MonitorSeatUpdatesRequestType:
+		return &MonitorSeatUpdatesCallbackRequest{}
+	case UpdateFlightPriceRequestType:
+		return &UpdateFlightPriceRequest{}
+	case CreateFlightRequestType:
+		return &CreateFlightRequest{}
 	}
 	logs.Error("Request DTO not provided")
 	return nil
+}
+
+type GetFlightIdentifiersRequest struct {
+	SourceLocation      string
+	DestinationLocation string
+}
+
+type GetFlightIdentifiersResponse struct {
+	FlightIdentifiers []int32
+}
+
+type GetFlightInformationRequest struct {
+	FlightIdentifier int32
+}
+
+type GetFlightInformationResponse struct {
+	DepartureTime       int64
+	Airfare             float64
+	TotalAvailableSeats int32
+}
+
+type MakeSeatReservationRequest struct {
+	FlightIdentifier int32
+	SeatsToReserve   int32
+}
+
+type MonitorSeatUpdatesCallbackRequest struct {
+	FlightIdentifier                 int32
+	LengthOfMonitorIntervalInSeconds int64
+}
+
+type MonitorSeatUpdatesCallbackResponse struct {
+	TotalAvailableSeats int32
+}
+
+type UpdateFlightPriceRequest struct {
+	FlightIdentifier int32
+	NewPrice         float64
+}
+
+type UpdateFlightPriceResponse struct {
+	FlightIdentifier    int32
+	SourceLocation      string
+	DestinationLocation string
+	DepartureTime       int64
+	Airfare             float64
+	TotalAvailableSeats int32
+}
+
+type CreateFlightRequest struct {
+	SourceLocation      string
+	DestinationLocation string
+	DepartureTime       int64
+	Airfare             float64
+	TotalAvailableSeats int32
+}
+
+type CreateFlightResponse struct {
+	FlightIdentifier int32
 }

@@ -4,12 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/cyiafn/flight_information_system/server/custom_errors"
 	"github.com/cyiafn/flight_information_system/server/dto"
 	"github.com/cyiafn/flight_information_system/server/dto/status_code"
 	"github.com/cyiafn/flight_information_system/server/duplicate_request"
 	"github.com/cyiafn/flight_information_system/server/logs"
 	"github.com/cyiafn/flight_information_system/server/net"
 	"github.com/cyiafn/flight_information_system/server/utils"
+	"github.com/cyiafn/flight_information_system/server/utils/bytes"
 	"github.com/cyiafn/flight_information_system/server/utils/rpc"
 )
 
@@ -24,8 +26,10 @@ const (
 	defaultUDPPort = 8080
 	udpPortKey     = "UDP_LISTENER_PORT"
 
-	requestTypeBytesLength = 1
-	shortIDBytesLength     = 9
+	requestTypeBytesLength   = 1
+	shortIDBytesLength       = 9
+	currentPacketBytesLength = 8
+	totalPacketsByteLength   = 8
 )
 
 var instance *server
@@ -35,6 +39,7 @@ type server struct {
 	Routes                 map[dto.RequestType]func(ctx context.Context, request any) (any, error)
 	Mode                   serverMode
 	DuplicateRequestFilter *duplicate_request.Filter
+	RequestBuffer          *requestBuffer
 }
 
 func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any, error), atMostOnceEnabled bool) {
@@ -50,6 +55,8 @@ func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any
 		instance.Mode = atLeastOnceServerMode
 	}
 
+	instance.RequestBuffer = newRequestBuffer()
+
 	instance.UDPListener = net.NewUDPListener(getUDPPort(), instance.RouteRequest)
 	instance.UDPListener.StartListening()
 
@@ -64,15 +71,18 @@ func SpinDown() {
 	logs.Info("Goodbye!")
 }
 
-func (s *server) RouteRequest(ctx context.Context, request []byte) []byte {
-	requestID := getRequestID(request)
-	if s.Mode == atMostOnceServerMode && !s.DuplicateRequestFilter.IsAllowed(string(requestID)) {
-		logs.Warn("RequestID: %s was repeated, aborting request", requestID)
-		return nil
+func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bool) {
+	req, complete := s.RequestBuffer.ProcessRequest(ctx, request)
+	if !complete {
+		logs.Info("Request is not complete, waiting for all packets: %s", utils.DumpJSON(req))
 	}
 
-	requestType := getRequestType(request)
-	requestBody := getRequestBody(request)
+	if s.Mode == atMostOnceServerMode && !s.DuplicateRequestFilter.IsAllowed(req.RequestID) {
+		logs.Warn("RequestID: %s was repeated, aborting request", req.RequestID)
+		return nil, false
+	}
+
+	requestType, requestBody := req.CompileRequest()
 
 	logs.Info("Received Request Type: %v", requestType)
 	requestDTO := dto.NewRequestDTO(requestType)
@@ -80,14 +90,14 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) []byte {
 		err := rpc.Unmarshal(requestBody, &requestDTO)
 		if err != nil {
 			logs.Error("Unable to marshal request, err: %v", err)
-			return nil
+			return nil, false
 		}
 	}
 
 	handler, ok := s.Routes[requestType]
 	if !ok {
 		logs.Error("no route for request type: %v, ignoring request", requestType)
-		return nil
+		return nil, false
 	}
 
 	response, err := handler(ctx, requestDTO)
@@ -99,20 +109,53 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) []byte {
 
 	resp, err := rpc.Marshal(wrappedResp)
 	if err != nil {
-		logs.Warn("error when marshalling, skipping response, err: %v", err)
-		return nil
+		logs.Warn("error when marshalling, err: %v", err)
+		resp, _ = rpc.Marshal(&dto.Response{
+			StatusCode: status_code.GetStatusCode(custom_errors.NewMarshallerError(err)),
+			Data:       nil,
+		})
 	}
 
-	resp = s.addHeaders(requestType, requestID, resp)
+	res := s.splitPayloadForSending(requestType, []byte(req.RequestID), resp)
 
 	logs.Info("response: %v", resp)
-	return resp
+	return res, true
 }
 
-func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, response []byte) []byte {
-	response = s.addRequestIDToHeader(requestID, response)
+func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID []byte, payload []byte) [][]byte {
+	output := make([][]byte, 0)
+	it := 0
+	for i := 0; i < len(payload)+net.DefaultByteBufferSize-s.getTotalBytesInHeader(); i += net.DefaultByteBufferSize - s.getTotalBytesInHeader() {
+		mxSize := utils.TernaryOperator(len(payload) < i+net.DefaultByteBufferSize-s.getTotalBytesInHeader(), len(payload), i+net.DefaultByteBufferSize-s.getTotalBytesInHeader())
+		output[it] = payload[i:mxSize]
+		it += 1
+	}
+
+	for i := range output {
+		output[i] = s.addHeaders(requestType, requestID, int64(i), int64(len(output)), output[i])
+	}
+
+	return output
+}
+
+func (s *server) getTotalBytesInHeader() int {
+	return requestTypeBytesLength + shortIDBytesLength + currentPacketBytesLength + totalPacketsByteLength
+}
+
+func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, packetNo int64, totalPacket int64, response []byte) []byte {
+	response = s.addTotalPacketToHeader(response, totalPacket)
+	response = s.addPacketNoToHeader(response, packetNo)
+	response = s.addRequestIDToHeader(response, requestID)
 	response = s.addResponseTypeHeader(response, dto.GetResponseType(requestType))
 	return response
+}
+
+func (s *server) addPacketNoToHeader(response []byte, packetNo int64) []byte {
+	return append(bytes.Int64ToBytes(packetNo), response...)
+}
+
+func (s *server) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
+	return append(bytes.Int64ToBytes(totalPacket), response...)
 }
 
 func (s *server) addRequestIDToHeader(response []byte, requestID []byte) []byte {
@@ -141,8 +184,16 @@ func getRequestID(request []byte) []byte {
 	return dest
 }
 
+func getCurrentPacketNumber(request []byte) []byte {
+	return request[requestTypeBytesLength+shortIDBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]
+}
+
+func getTotalPacketNumber(request []byte) []byte {
+	return request[requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength+totalPacketsByteLength]
+}
+
 func getRequestBody(request []byte) []byte {
-	return request[requestTypeBytesLength+shortIDBytesLength:]
+	return request[requestTypeBytesLength+shortIDBytesLength+totalPacketsByteLength+currentPacketBytesLength:]
 }
 
 func GetIPAddr(ctx context.Context) string {

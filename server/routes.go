@@ -8,5 +8,11 @@ import (
 )
 
 var routes = map[dto.RequestType]func(ctx context.Context, request any) (any, error){
-	1: handlers.Ping,
+	dto.PingRequestType:                 handlers.Ping,
+	dto.GetFlightIdentifiersRequestType: handlers.GetFlightIdentifiers,
+	dto.GetFlightInformationRequestType: handlers.GetFlightInformation,
+	dto.MakeSeatReservationRequestType:  handlers.MakeSeatReservation,
+	dto.MonitorSeatUpdatesRequestType:   handlers.MonitorSeatUpdates,
+	dto.UpdateFlightPriceRequestType:    handlers.UpdateFlightPrice,
+	dto.CreateFlightRequestType:         handlers.CreateFlight,
 }

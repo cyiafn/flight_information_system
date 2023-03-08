@@ -39,23 +39,10 @@ func makeConn(addr string) (*net.UDPConn, error) {
 }
 
 func sendPayload(conn *net.UDPConn, data []byte) error {
-	for i := 0; i < len(data); i += defaultByteBufferSize {
-		endIndex := i + defaultByteBufferSize
-		if endIndex > len(data) {
-			endIndex = len(data)
-		}
-
-		_, err := conn.Write(data[i:endIndex])
-		if err != nil {
-			logs.Error("error in sending data, aborting, err: %v", err)
-			return err
-		}
-	}
-
-	_, err := conn.Write(make([]byte, defaultByteBufferSize))
+	_, err := conn.Write(data)
 	if err != nil {
-		logs.Error("error in sending data, aborting, err: %v", err)
-		return err
+		logs.Error("error sending payload: %v", err)
 	}
-	return nil
+	return err
+
 }
