@@ -48,7 +48,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
 
     case ResponseType.GetFlightInformationResponseType:
       departureTime = buffer.readBigUInt64LE();
-      airfare = buffer.readFloatLE(8);
+      airfare = buffer.readDoubleLE(8);
       totalAvailableSeats = buffer.readUInt32LE(16);
       result = {
         DepartureTime: departureTime,
