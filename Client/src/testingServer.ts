@@ -22,4 +22,4 @@ server.on("message", (msg, rinfo) => {
 
 const PORT = 8080;
 
-server.bind(PORT, "localhost");
+server.bind(PORT, "127.0.0.1");
