@@ -133,6 +133,9 @@ func marshalArray(response *[]byte, field reflect.Value, elementType reflect.Kin
 }
 
 func marshalStruct(response *[]byte, reflectValue reflect.Value) error {
+	if reflectValue.Elem().Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem().Elem()
+	}
 	for i := 0; i < reflectValue.NumField(); i++ {
 		field := reflectValue.FieldByName(reflectValue.Type().Field(i).Name)
 		if field.IsValid() {

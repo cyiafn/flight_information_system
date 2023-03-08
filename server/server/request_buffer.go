@@ -36,6 +36,7 @@ func (r *requestBuffer) ProcessRequest(ctx context.Context, payload []byte) (*re
 	}
 
 	if r.Buffer[key].IsComplete() {
+		delete(r.Buffer, key)
 		return r.Buffer[key], true
 	}
 	return nil, false
@@ -52,8 +53,10 @@ func (r *requestBuffer) StartCleanUp() {
 					if !value.TimedOut() {
 						continue
 					}
-					logs.Info("Timing out requestID: %s as it has exceeded 5 seconds to deliver all packets.", value.RequestID)
-					delete(r.Buffer, key)
+					if _, ok := r.Buffer[key]; ok {
+						logs.Info("Timing out requestID: %s as it has exceeded 5 seconds to deliver all packets.", value.RequestID)
+						delete(r.Buffer, key)
+					}
 				}
 			}
 		}

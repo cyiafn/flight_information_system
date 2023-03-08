@@ -5,26 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aaeecd31-e980-49f5-9a72-67068b75aabb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/custom_errors/business_logic.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dao/flight.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/flight.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/create_flight.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/get_flight_identifiers.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/get_flight_information.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/make_seat_reservation.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/monitor_updates_callback.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/update_flight_price.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/callback/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/callback/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dto/dto.go" beforeDir="false" afterPath="$PROJECT_DIR$/dto/dto.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dto/status_code/status_code.go" beforeDir="false" afterPath="$PROJECT_DIR$/dto/status_code/status_code.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/net/callback_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/net/callback_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/net/listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/net/listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/orm/client.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/routes.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/request_buffer.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/request_buffer.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/bytes/bytes.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/bytes/bytes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/rpc/marshaller.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/rpc/marshaller.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +24,9 @@
     </option>
   </component>
   <component name="GOROOT" url="file:///opt/homebrew/Cellar/go/1.19.6/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="GitToolBoxStore">
     <option name="recentBranches">
       <RecentBranches>

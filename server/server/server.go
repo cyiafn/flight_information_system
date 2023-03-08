@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
@@ -87,7 +88,7 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 	logs.Info("Received Request Type: %v", requestType)
 	requestDTO := dto.NewRequestDTO(requestType)
 	if requestDTO != nil {
-		err := rpc.Unmarshal(requestBody, &requestDTO)
+		err := rpc.Unmarshal(requestBody, requestDTO)
 		if err != nil {
 			logs.Error("Unable to marshal request, err: %v", err)
 			return nil, false
@@ -118,7 +119,7 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 
 	res := s.splitPayloadForSending(requestType, []byte(req.RequestID), resp)
 
-	logs.Info("response: %v", resp)
+	logs.Info("response: %v", res[0])
 	return res, true
 }
 
@@ -130,11 +131,9 @@ func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID [
 		return output
 	}
 	output := make([][]byte, 0)
-	it := 0
-	for i := 0; i < len(payload)+net.DefaultByteBufferSize-s.getTotalBytesInHeader(); i += net.DefaultByteBufferSize - s.getTotalBytesInHeader() {
+	for i := 0; i < len(payload); i += net.DefaultByteBufferSize - s.getTotalBytesInHeader() {
 		mxSize := utils.TernaryOperator(len(payload) < i+net.DefaultByteBufferSize-s.getTotalBytesInHeader(), len(payload), i+net.DefaultByteBufferSize-s.getTotalBytesInHeader())
-		output[it] = payload[i:mxSize]
-		it += 1
+		output = append(output, payload[i:mxSize])
 	}
 
 	for i := range output {
@@ -157,7 +156,7 @@ func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, packe
 }
 
 func (s *server) addPacketNoToHeader(response []byte, packetNo int64) []byte {
-	return append(bytes.Int64ToBytes(packetNo), response...)
+	return append(bytes.Int64ToBytes(packetNo+1), response...)
 }
 
 func (s *server) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
@@ -191,6 +190,7 @@ func getRequestID(request []byte) []byte {
 }
 
 func getCurrentPacketNumber(request []byte) []byte {
+	fmt.Printf("%v\n", bytes.ToInt64(request[requestTypeBytesLength+shortIDBytesLength:requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]))
 	return request[requestTypeBytesLength+shortIDBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]
 }
 
