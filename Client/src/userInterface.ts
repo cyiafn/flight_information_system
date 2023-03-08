@@ -13,7 +13,7 @@ export async function userInterface() {
   console.log("3. Make a Flight Seat Reservation");
   console.log("4. Monitor Flight Seats Information");
   console.log("5. Update The Flight Ticket Price");
-  console.log("6. Create A Flight Ticket Request");
+  console.log("6. Create a Flight Request");
   option = Number(await rl.question("What do you wish to do?\n"));
   while (option < 1 || option > 6) {
     option = Number(await rl.question("Wrong Input\n"));

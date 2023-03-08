@@ -125,13 +125,14 @@ export class UDPClient {
 
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
-            console.log(msg);
             clearTimeout(closeSocketTimeout);
             clearTimeout(timeOutId);
             // for (const hex of msg) console.log(hex);
             // console.log("");
 
             const callback = this.receiveResponse(msg) as string;
+
+            // Dealing with callback
             if (callback === "Monitor Success") {
               setTimeout(() => {
                 console.log("No more monitoring");
@@ -141,7 +142,7 @@ export class UDPClient {
               this.monitorMode = true;
             } else if (!this.monitorMode)
               this.client.close(() => {
-                console.log(`${msg}\n CLOSED SOCKET`);
+                console.log(`CLOSED SOCKET`);
               });
           });
 
