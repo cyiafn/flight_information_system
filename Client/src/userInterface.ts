@@ -68,7 +68,7 @@ async function q2() {
 
   return {
     Discriminator: RequestType.GetFlightInformationRequestType,
-    FlightIdentifer: flightIdentifier,
+    FlightIdentifier: flightIdentifier,
   };
 }
 

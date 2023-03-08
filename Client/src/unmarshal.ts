@@ -6,7 +6,6 @@ import {
 } from "./interfaces";
 
 export function unmarshal(buffer: Buffer, requestType: Number) {
-  console.log();
   const statusCode = buffer[0];
   const data = buffer.subarray(1, buffer.length);
 
