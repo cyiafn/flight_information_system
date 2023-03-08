@@ -66,16 +66,6 @@ export class UDPClient {
     return this.pendingRequests.get(id);
   }
 
-  //Method to handle error -> TO-DO Handle Specific Error by their error code
-  handleError() {
-    console.log("Client Encountered an Error");
-  }
-
-  // TO-DO Method to create handle Request or Response...
-  handleMessage(msg: string, rinfo: RemoteInfo) {
-    console.log("ACK");
-  }
-
   public sendMultipleRequests(dto: any, requestType: number) {
     // If dto is q4
     if (requestType === 4)
@@ -99,12 +89,12 @@ export class UDPClient {
   }
 
   private receiveResponse(buffer: Buffer) {
+    console.log(buffer);
     const header = deconstructHeaders(buffer);
     let tempBuffer;
     while (header.noOfPackets !== header.packetNo) {
       //continue to listen
     }
-    console.log(buffer);
     const payload = demarshal(buffer.subarray(26, 512), header.requestType);
     // display the payload information here
     console.log(payload);
@@ -156,6 +146,7 @@ export class UDPClient {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
 
+              this.receiveResponse(msg);
               this.client.close(() => {
                 console.log(`${msg}\n CLOSED SOCKET`);
               });
