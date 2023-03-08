@@ -1,66 +1,43 @@
 import { Buffer } from "buffer";
-import {
-  instanceOfCreateFlightRequest,
-  instanceOfGetFlightIdentifiersRequest,
-  instanceOfGetFlightInformationRequest,
-  instanceOfMakeSeatReservationRequest,
-  instanceOfMonitorSeatUpdatesRequest,
-  instanceOfUpdateFlightPriceRequest,
-} from "./interfaces";
+
+function toByteArray<T>(data: T): Buffer {
+  console.log(typeof data);
+  if (Buffer.isBuffer(data)) return data;
+  else if (typeof data === "string") {
+    return Buffer.from(data + "\0");
+  } else if (typeof data === "number") {
+    var buffer;
+    if (!Number.isInteger(data)) {
+      buffer = Buffer.alloc(8);
+      buffer.writeDoubleLE(data);
+    } else {
+      buffer = Buffer.alloc(4);
+      buffer.writeInt32LE(data);
+    }
+    return buffer;
+  } else if (typeof data === "bigint") {
+    buffer = Buffer.alloc(8);
+    buffer.writeBigInt64LE(BigInt(data));
+    return buffer;
+  } else if (typeof data === "boolean") {
+    const value = data ? 1 : 0;
+    return Buffer.from([value]);
+  } else if (Array.isArray(data)) {
+    const buffer = Buffer.alloc(1);
+    buffer.writeBigInt64LE(BigInt(data.length));
+    const bytes = data.map((e) => toByteArray(e));
+    return Buffer.concat([buffer, ...bytes]);
+  } else if (data instanceof Object) {
+    const values = Object.values(data);
+    const bytes = values.map((v) => toByteArray(v));
+    return Buffer.concat(bytes);
+  } else {
+    throw new Error(`Unsupported data type: ${typeof data}`);
+  }
+}
 
 export function marshal(data: any): any {
-  let requestBuffer;
-  if (instanceOfGetFlightIdentifiersRequest(data)) {
-    const lengthReq =
-      data.SourceLocation.length + data.DestinationLocation.length + 2;
-    requestBuffer = Buffer.alloc(lengthReq);
-    requestBuffer.write(data.SourceLocation);
-    requestBuffer.write("\0", data.SourceLocation.length);
-    requestBuffer.write(
-      data.DestinationLocation,
-      data.SourceLocation.length + 1
-    );
-    requestBuffer.write("\0", lengthReq - 1);
-  } else if (instanceOfGetFlightInformationRequest(data)) {
-    requestBuffer = Buffer.alloc(4);
-    requestBuffer.writeInt32LE(data.FlightIdentifier);
-  } else if (instanceOfMakeSeatReservationRequest(data)) {
-    requestBuffer = Buffer.alloc(8);
-    requestBuffer.writeInt32LE(data.FlightIdentifier);
-    requestBuffer.writeInt32LE(data.SeatsToReserve, 4);
-  } else if (instanceOfMonitorSeatUpdatesRequest(data)) {
-    requestBuffer = Buffer.alloc(12);
-    requestBuffer.writeInt32LE(data.FlightIdentifier);
-    requestBuffer.writeBigInt64LE(
-      BigInt(data.LengthOfMonitorIntervalInSeconds),
-      4
-    );
-  } else if (instanceOfUpdateFlightPriceRequest(data)) {
-    requestBuffer = Buffer.alloc(12);
-    requestBuffer.writeInt32LE(data.FlightIdentifier);
-    requestBuffer.writeDoubleLE(data.NewPrice, 4);
-  } else if (instanceOfCreateFlightRequest(data)) {
-    const lengthReq =
-      data.SourceLocation.length +
-      data.DestinationLocation.length +
-      2 +
-      8 +
-      8 +
-      4;
-    let start = data.SourceLocation.length;
-    requestBuffer = Buffer.alloc(lengthReq);
-    requestBuffer.write(data.SourceLocation);
-    requestBuffer.write("\0", start);
-
-    requestBuffer.write(data.DestinationLocation, ++start);
-    requestBuffer.write("\0", (start += data.DestinationLocation.length));
-
-    requestBuffer.writeBigInt64LE(BigInt(data.DepartureTime), ++start);
-
-    requestBuffer.writeDoubleLE(data.Airfare, (start += 8));
-
-    requestBuffer.writeInt32LE(data.TotalAvailableSeats, (start += 8));
-  }
-
+  let requestBuffer = toByteArray(data);
+  console.log(requestBuffer);
   return requestBuffer;
 }

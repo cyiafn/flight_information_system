@@ -15,6 +15,7 @@ server.on("listening", () => {
 
 server.on("message", (msg, rinfo) => {
   console.log(`Received message ${rinfo.address}:${rinfo.port}`);
+  console.log(msg);
 
   const headers = deconstructHeaders(msg);
   let packet = Buffer.from([0x00]),

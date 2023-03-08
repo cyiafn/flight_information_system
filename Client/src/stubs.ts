@@ -9,17 +9,20 @@ export function getFlightIdentifier(
   destinationLocation: string
 ) {
   const payload = marshal({
-    Discriminator: RequestType.GetFlightIdentifiersRequestType,
     SourceLocation: sourceLocation,
     DestinationLocation: destinationLocation,
   });
 
-  client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
+  client.sendRequest(
+    payload,
+    RequestType.GetFlightIdentifiersRequestType,
+    1,
+    1
+  );
 }
 
 export function getFlightInformation(flightIdentifier: number) {
   const payload = marshal({
-    Discriminator: RequestType.GetFlightInformationRequestType,
     FlightIdentifier: flightIdentifier,
   });
 
@@ -36,7 +39,6 @@ export function createSeatReservationRequest(
   seatsToReserve: number
 ) {
   const payload = marshal({
-    Discriminator: RequestType.MakeSeatReservationRequestType,
     FlightIdentifier: flightIdentifier,
     SeatsToReserve: seatsToReserve,
   });
@@ -46,10 +48,9 @@ export function createSeatReservationRequest(
 
 export function monitorSeatUpdatesCallbackRequest(
   flightIdentifier: number,
-  lengthOfMonitorIntervalInSeconds: number
+  lengthOfMonitorIntervalInSeconds: bigint
 ) {
   const payload = marshal({
-    Discriminator: RequestType.MonitorSeatUpdatesRequestType,
     FlightIdentifier: flightIdentifier,
     LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds,
   });
@@ -62,7 +63,6 @@ export function updateFlightPriceRequest(
   newPrice: number
 ) {
   const payload = marshal({
-    Discriminator: RequestType.UpdateFlightPriceRequestType,
     FlightIdentifier: flightIdentifier,
     NewPrice: newPrice,
   });
@@ -72,7 +72,6 @@ export function updateFlightPriceRequest(
 
 export function createFlightRequest(dto: CreateFlightRequest) {
   const payload = marshal({
-    Discriminator: RequestType.CreateFlightRequestType,
     ...dto,
   });
 

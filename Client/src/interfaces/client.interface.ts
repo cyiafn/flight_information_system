@@ -34,31 +34,17 @@ export enum ResponseType {
 }
 
 export type GetFlightIdentifiersRequest = {
-  Discriminator: RequestType.GetFlightIdentifiersRequestType;
   SourceLocation: string;
   DestinationLocation: string;
 };
-
-export function instanceOfGetFlightIdentifiersRequest(
-  obj: any
-): obj is GetFlightIdentifiersRequest {
-  return obj.Discriminator === RequestType.GetFlightIdentifiersRequestType;
-}
 
 export type GetFlightIdentifiersResponse = {
   FlightIdentifiers: number[];
 };
 
 export type GetFlightInformationRequest = {
-  Discriminator: RequestType.GetFlightInformationRequestType;
   FlightIdentifier: number;
 };
-
-export function instanceOfGetFlightInformationRequest(
-  obj: any
-): obj is GetFlightInformationRequest {
-  return obj.Discriminator === RequestType.GetFlightInformationRequestType;
-}
 
 export type GetFlightInformationResponse = {
   DepartureTime: number;
@@ -67,68 +53,40 @@ export type GetFlightInformationResponse = {
 };
 
 export type MakeSeatReservationRequest = {
-  Discriminator: RequestType.MakeSeatReservationRequestType;
   FlightIdentifier: number;
   SeatsToReserve: number;
 };
 
-export function instanceOfMakeSeatReservationRequest(
-  obj: any
-): obj is MakeSeatReservationRequest {
-  return obj.Discriminator === RequestType.MakeSeatReservationRequestType;
-}
-
 export type MonitorSeatUpdatesCallbackRequest = {
-  Discriminator: RequestType.MonitorSeatUpdatesRequestType;
   FlightIdentifier: number;
   LengthOfMonitorIntervalInSeconds: number;
 };
-
-export function instanceOfMonitorSeatUpdatesRequest(
-  obj: any
-): obj is MonitorSeatUpdatesCallbackRequest {
-  return obj.Discriminator === RequestType.MonitorSeatUpdatesRequestType;
-}
 
 export type MonitorSeatUpdatesCallbackResponse = {
   TotalAvailableSeats: number;
 };
 
 export type UpdateFlightPriceRequest = {
-  Discriminator: RequestType.UpdateFlightPriceRequestType;
   FlightIdentifier: number;
   NewPrice: number;
 };
-
-export function instanceOfUpdateFlightPriceRequest(
-  obj: any
-): obj is UpdateFlightPriceRequest {
-  return obj.Discriminator === RequestType.UpdateFlightPriceRequestType;
-}
 
 export type UpdateFlightPriceResponse = {
   FlightIdentifier: number;
   SourceLocation: string;
   DestinationLocation: string;
-  DepartureTime: number;
+  DepartureTime: bigint;
   Airfare: number;
   TotalAvailableSeats: number;
 };
 
 export type CreateFlightRequest = {
-  Discriminator?: RequestType.CreateFlightRequestType;
   SourceLocation: string;
   DestinationLocation: string;
-  DepartureTime: number;
+  DepartureTime: bigint;
   Airfare: number;
   TotalAvailableSeats: number;
 };
-
-export function instanceOfCreateFlightRequest(
-  obj: any
-): obj is CreateFlightRequest {
-  return obj.Discriminator === RequestType.CreateFlightRequestType;
-}
 
 export type CreateFlightResponse = {
   FlightIdentifier: number;

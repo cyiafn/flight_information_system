@@ -90,7 +90,7 @@ async function q4() {
 
   monitorSeatUpdatesCallbackRequest(
     flightIdentifier,
-    lengthOfMonitorIntervalInSeconds
+    BigInt(lengthOfMonitorIntervalInSeconds)
   );
 }
 
@@ -121,7 +121,7 @@ async function q6() {
   const dto = {
     SourceLocation: sourceLocation,
     DestinationLocation: destinationLocation,
-    DepartureTime: departureTime,
+    DepartureTime: BigInt(departureTime),
     Airfare: airfare,
     TotalAvailableSeats: totalAvailableSeats,
   };
