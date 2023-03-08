@@ -58,6 +58,11 @@ func (c *Client[T]) Notify(item T, respType dto.ResponseType, payload any, err e
 		return nil
 	}
 
+	if clients := c.NotifiableClients[item]; clients.Len() == 0 {
+		logs.Info("no client to notify")
+		return nil
+	}
+
 	wrappedResp := &dto.Response{StatusCode: status_code.GetStatusCode(err), Data: payload}
 
 	respBody, err := rpc.Marshal(wrappedResp)
