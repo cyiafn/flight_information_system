@@ -4,7 +4,7 @@ import { customAlphabet } from "nanoid";
 
 export const createRequestId = customAlphabet(
   "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  10
+  9
 );
 
 export function constructHeaders(
@@ -13,22 +13,22 @@ export function constructHeaders(
   packetNo: number,
   noOfPackets: number
 ) {
-  const header = Buffer.allocUnsafe(13);
+  const header = Buffer.allocUnsafe(26);
 
   header.writeUInt8(requestType, 0);
   header.write(requestIdStr, 1);
-  header.writeUInt8(packetNo, 11);
-  header.writeUInt8(noOfPackets, 12);
+  header.writeBigUint64LE(BigInt(packetNo), 10);
+  header.writeBigUint64LE(BigInt(noOfPackets), 18);
 
   return header;
 }
 
 export function deconstructHeaders(packet: Buffer) {
-  const packetSliced = packet.subarray(0, 13);
+  const packetSliced = packet.subarray(0, 26);
   const requestType = packetSliced.readUint8(0);
-  const requestIdStr = packetSliced.toString("utf-8", 1, 11);
-  const packetNo = packetSliced.readUInt8(11);
-  const noOfPackets = packetSliced.readUInt8(12);
+  const requestIdStr = packetSliced.toString("utf-8", 1, 10);
+  const packetNo = packetSliced.readBigUint64LE(10);
+  const noOfPackets = packetSliced.readBigUint64LE(18);
 
   return {
     requestType: requestType,
