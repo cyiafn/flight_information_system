@@ -96,7 +96,7 @@ export class UDPClient {
   }
 
   private callback(expireTime: number) {
-    console.log(`In callback, expiring in ${expireTime * 1000} seconds`);
+    console.log(`In callback, expiring in ${expireTime} seconds`);
     setTimeout(() => {
       console.log("No more monitoring");
       this.client.close();
