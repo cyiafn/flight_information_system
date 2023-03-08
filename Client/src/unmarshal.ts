@@ -6,6 +6,7 @@ import {
 } from "./interfaces";
 
 export function unmarshal(buffer: Buffer, requestType: Number) {
+  console.log();
   const statusCode = buffer[0];
   const data = buffer.subarray(1, buffer.length);
 
@@ -21,7 +22,7 @@ export function unmarshal(buffer: Buffer, requestType: Number) {
     case StatusCode.InsufficientNumberOfAvailableSeats:
       return "Insufficient number of available seats";
     default:
-      return determineResponseType(buffer, requestType);
+      return determineResponseType(data, requestType);
   }
 }
 
