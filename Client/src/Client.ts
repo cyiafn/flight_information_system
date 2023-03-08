@@ -104,6 +104,7 @@ export class UDPClient {
     while (header.noOfPackets !== header.packetNo) {
       //continue to listen
     }
+    console.log(buffer);
     const payload = demarshal(buffer.subarray(26, 512), header.requestType);
     // display the payload information here
     console.log(payload);
