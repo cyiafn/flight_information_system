@@ -110,6 +110,7 @@ async function q5() {
 
   return {
     Discriminator: RequestType.UpdateFlightPriceRequestType,
+    FlightIdentifier: flightIdentifier,
     NewPrice: newPrice,
   };
 }

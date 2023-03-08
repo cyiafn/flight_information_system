@@ -38,7 +38,7 @@ export function marshal(data: any): any {
   } else if (instanceOfUpdateFlightPriceRequest(data)) {
     requestBuffer = Buffer.alloc(12);
     requestBuffer.writeUint32LE(data.FlightIdentifier);
-    requestBuffer.writeFloatLE(data.NewPrice, 4);
+    requestBuffer.writeDoubleLE(data.NewPrice, 4);
   } else if (instanceOfCreateFlightRequest(data)) {
     const lengthReq =
       data.SourceLocation.length +
@@ -57,7 +57,7 @@ export function marshal(data: any): any {
 
     requestBuffer.writeBigUInt64LE(BigInt(data.DepartureTime), ++start);
 
-    requestBuffer.writeFloatLE(data.Airfare, (start += 8));
+    requestBuffer.writeDoubleLE(data.Airfare, (start += 8));
 
     requestBuffer.writeUInt32LE(data.TotalAvailableSeats, (start += 8));
   }
