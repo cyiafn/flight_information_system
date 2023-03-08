@@ -32,7 +32,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       break;
 
     case ResponseType.GetFlightIdentifiersResponseType:
-      const lenOfArr = buffer.readBigUInt64LE();
+      const lenOfArr = buffer.readBigInt64LE();
       const flightIds = [];
       let eSize = 8;
       for (let i = 0; i < lenOfArr; i++) {
@@ -43,9 +43,9 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       break;
 
     case ResponseType.GetFlightInformationResponseType:
-      departureTime = buffer.readBigUInt64LE();
+      departureTime = buffer.readBigInt64LE();
       airfare = buffer.readDoubleLE(8);
-      totalAvailableSeats = buffer.readUInt32LE(16);
+      totalAvailableSeats = buffer.readInt32LE(16);
       result = {
         DepartureTime: departureTime,
         Airfare: airfare,
@@ -62,14 +62,14 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       break;
 
     case ResponseType.MonitorSeatUpdatesCallbackType:
-      totalAvailableSeats = buffer.readUInt32LE();
+      totalAvailableSeats = buffer.readInt32LE();
       result = {
         TotalAvailableSeats: totalAvailableSeats,
       };
       break;
 
     case ResponseType.UpdateFlightPriceResponseType:
-      flightIdentifier = buffer.readUInt32LE();
+      flightIdentifier = buffer.readInt32LE();
       let curLen = 4;
 
       const { totalLen: totalLen1, str: sourceLocation } = findStrFromBuffer(
@@ -81,10 +81,10 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
         findStrFromBuffer(buffer.subarray(curLen, buffer.length));
       curLen += totalLen2;
 
-      departureTime = buffer.readBigUInt64LE(curLen);
+      departureTime = buffer.readBigInt64LE(curLen);
 
       airfare = buffer.readDoubleLE((curLen += 8));
-      totalAvailableSeats = buffer.readUint32LE((curLen += 8));
+      totalAvailableSeats = buffer.readInt32LE((curLen += 8));
 
       result = {
         FlightIdentifier: flightIdentifier,
@@ -97,7 +97,7 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       break;
 
     case ResponseType.CreateFlightResponseType:
-      flightIdentifier = buffer.readUInt32LE();
+      flightIdentifier = buffer.readInt32LE();
       return { FlightIdentifier: flightIdentifier };
   }
 
@@ -112,46 +112,3 @@ function findStrFromBuffer(buffer: Buffer) {
   }
   return { totalLen: idx + 1, str: buffer.toString("utf-8", 0, idx) };
 }
-
-//Case 102
-// const buffer = Buffer.alloc(20);
-// buffer.writeBigUInt64LE(BigInt(3));
-// buffer.writeUint32LE(123, 8);
-// buffer.writeUint32LE(45, 12);
-// buffer.writeUint32LE(100, 16);
-// console.log(buffer);
-// const ans = determineResponseType(buffer, 102);
-// console.log(ans);
-
-//Case 103
-// const buffer = Buffer.alloc(20);
-// buffer.writeBigUInt64LE(BigInt(1400), 0);
-// buffer.writeFloatLE(12000.25, 8);
-// buffer.writeUint32LE(100, 16);
-// console.log(buffer);
-// const ans = determineResponseType(buffer, 103);
-// console.log(ans);
-
-//Case 105
-// const buffer = Buffer.alloc(4);
-// buffer.writeUint32LE(100, 0);
-// console.log(buffer);
-// const ans = determineResponseType(buffer, 105);
-// console.log(ans);
-
-//Case 106
-// const buffer = Buffer.alloc(43);
-// buffer.writeUint32LE(100);
-// buffer.write("Singapore\0", 4);
-// buffer.write("Malaysia\0", 14);
-// buffer.writeBigUint64LE(BigInt(1400), 23);
-// buffer.writeFloatLE(140.99, 31);
-// buffer.writeUint32LE(69, 39);
-// const ans = determineResponseType(buffer, 106);
-// console.log(ans);
-
-//case 107
-// const buffer = Buffer.alloc(4);
-// buffer.writeUint32LE(150);
-// const ans = determineResponseType(buffer, 107);
-// console.log(ans);

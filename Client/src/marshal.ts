@@ -23,21 +23,21 @@ export function marshal(data: any): any {
     requestBuffer.write("\0", lengthReq - 1);
   } else if (instanceOfGetFlightInformationRequest(data)) {
     requestBuffer = Buffer.alloc(4);
-    requestBuffer.writeUint32LE(data.FlightIdentifier);
+    requestBuffer.writeInt32LE(data.FlightIdentifier);
   } else if (instanceOfMakeSeatReservationRequest(data)) {
     requestBuffer = Buffer.alloc(8);
-    requestBuffer.writeUint32LE(data.FlightIdentifier);
-    requestBuffer.writeUint32LE(data.SeatsToReserve, 4);
+    requestBuffer.writeInt32LE(data.FlightIdentifier);
+    requestBuffer.writeInt32LE(data.SeatsToReserve, 4);
   } else if (instanceOfMonitorSeatUpdatesRequest(data)) {
     requestBuffer = Buffer.alloc(12);
-    requestBuffer.writeUint32LE(data.FlightIdentifier);
-    requestBuffer.writeBigUInt64LE(
+    requestBuffer.writeInt32LE(data.FlightIdentifier);
+    requestBuffer.writeBigInt64LE(
       BigInt(data.LengthOfMonitorIntervalInSeconds),
       4
     );
   } else if (instanceOfUpdateFlightPriceRequest(data)) {
     requestBuffer = Buffer.alloc(12);
-    requestBuffer.writeUint32LE(data.FlightIdentifier);
+    requestBuffer.writeInt32LE(data.FlightIdentifier);
     requestBuffer.writeDoubleLE(data.NewPrice, 4);
   } else if (instanceOfCreateFlightRequest(data)) {
     const lengthReq =
@@ -55,11 +55,11 @@ export function marshal(data: any): any {
     requestBuffer.write(data.DestinationLocation, ++start);
     requestBuffer.write("\0", (start += data.DestinationLocation.length));
 
-    requestBuffer.writeBigUInt64LE(BigInt(data.DepartureTime), ++start);
+    requestBuffer.writeBigInt64LE(BigInt(data.DepartureTime), ++start);
 
     requestBuffer.writeDoubleLE(data.Airfare, (start += 8));
 
-    requestBuffer.writeUInt32LE(data.TotalAvailableSeats, (start += 8));
+    requestBuffer.writeInt32LE(data.TotalAvailableSeats, (start += 8));
   }
 
   return requestBuffer;
