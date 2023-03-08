@@ -45,6 +45,7 @@ func (c *Client[T]) Subscribe(ctx context.Context, item T, expireDuration time.D
 	}
 
 	c.NotifiableClients[item].MustAdd(addr)
+	logs.Info("Client: %s has successfully been subscribed to item: %s", addr, utils.DumpJSON(item))
 	go c.cleanup(item, addr, expireDuration)
 }
 
