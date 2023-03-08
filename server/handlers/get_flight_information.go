@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
 	"github.com/cyiafn/flight_information_system/server/database"
 	"github.com/cyiafn/flight_information_system/server/dto"
@@ -24,7 +23,7 @@ func GetFlightInformation(_ context.Context, request any) (any, error) {
 		}
 	}
 
-	if foundFlight {
+	if !foundFlight {
 		return nil, custom_errors.NewNoSuchFlightIdentifierError()
 	}
 

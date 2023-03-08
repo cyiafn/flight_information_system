@@ -21,13 +21,13 @@ func ToBytes[T any](a T) []byte {
 
 func Int32ToBytes(a int32) []byte {
 	buf := make([]byte, 4)
-	binary.BigEndian.PutUint32(buf, uint32(a))
+	binary.LittleEndian.PutUint32(buf, uint32(a))
 	return buf
 }
 
 func Int64ToBytes(a int64) []byte {
 	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(a))
+	binary.LittleEndian.PutUint64(buf, uint64(a))
 	return buf
 }
 
