@@ -144,12 +144,15 @@ export class UDPClient {
             this.client.on("message", (msg) => {
               clearTimeout(closeSocketTimeout);
               clearTimeout(timeOutId);
-              console.log(msg.toString("decimal"));
+              for (const hex of msg.toString().split(" ")) {
+                process.stdout.write(hex);
+              }
+              console.log("");
 
               this.receiveResponse(msg);
-              this.client.close(() => {
-                console.log(`${msg}\n CLOSED SOCKET`);
-              });
+              // this.client.close(() => {
+              //   console.log(`${msg}\n CLOSED SOCKET`);
+              // });
             });
 
             const closeSocketTimeout = setTimeout(() => {
