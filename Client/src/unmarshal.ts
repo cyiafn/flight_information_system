@@ -27,27 +27,25 @@ export function unmarshal(buffer: Buffer, requestType: Number) {
 
 function determineResponseType(buffer: Buffer, responseType: Number) {
   let result;
-  let totalAvailableSeats: number,
-    airfare: number,
-    flightIdentifier: number,
-    seatsToReserve: number,
-    newPrice: number;
+  let totalAvailableSeats: number, airfare: number, flightIdentifier: number;
   let departureTime: BigInt;
 
   switch (responseType) {
     case ResponseType.PingResponseType:
       console.log("PONG");
       break;
+
     case ResponseType.GetFlightIdentifiersResponseType:
       const lenOfArr = buffer.readBigUInt64LE();
       const flightIds = [];
       let eSize = 8;
       for (let i = 0; i < lenOfArr; i++) {
-        flightIds.push(buffer.readUint32LE(eSize));
+        flightIds.push(buffer.readInt32LE(eSize));
         eSize += 4;
       }
       result = { FlightIdentifiers: flightIds };
       break;
+
     case ResponseType.GetFlightInformationResponseType:
       departureTime = buffer.readBigUInt64LE();
       airfare = buffer.readFloatLE(8);

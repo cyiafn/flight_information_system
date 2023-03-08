@@ -71,7 +71,7 @@ export class UDPClient {
     if (requestType === 4)
       this.monitorTimeOut = dto.LengthOfMonitorIntervalInSeconds;
 
-    // 13 bytes header message max 499 Bytes
+    // 26 bytes header message max 499 Bytes
 
     // Create Request Id for these spliced msg requests
     const requestId = createRequestId();
@@ -94,7 +94,7 @@ export class UDPClient {
     while (header.noOfPackets !== header.packetNo) {
       //continue to listen
     }
-    const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
+    const payload = unmarshal(buffer.subarray(27, 512), header.requestType);
     // display the payload information here
     console.log(payload);
   }
