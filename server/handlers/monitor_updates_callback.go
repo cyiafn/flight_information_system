@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"context"
+	"github.com/cyiafn/flight_information_system/server/custom_errors"
+	"github.com/cyiafn/flight_information_system/server/database"
+	"github.com/cyiafn/flight_information_system/server/utils/predicates"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/callback"
@@ -18,6 +21,13 @@ func init() {
 
 func MonitorSeatUpdates(ctx context.Context, request any) (any, error) {
 	req := request.(*dto.MonitorSeatUpdatesCallbackRequest)
+	exists := predicates.One(database.GetAllFlights(), func(flight *dao.Flight) bool {
+		return flight.FlightIdentifier == req.FlightIdentifier
+	})
+	if !exists {
+		return nil, custom_errors.NewNoSuchFlightIdentifierError()
+	}
+
 	monitorSeatUpdatesCallbackClient.Subscribe(ctx, req.FlightIdentifier, time.Duration(req.LengthOfMonitorIntervalInSeconds)*time.Second)
 
 	return nil, nil
