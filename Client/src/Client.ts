@@ -21,6 +21,7 @@ export class UDPClient {
   pendingRequests: Map<string, PendingRequest>;
   timeout: number;
   monitorTimeOut: number;
+  monitorMode: boolean;
 
   constructor(address: string, sendPort: number) {
     this.address = address; //IP Address of Server
@@ -31,6 +32,7 @@ export class UDPClient {
     this.pendingRequests = new Map(); //Storing of Pending Requests
     this.timeout = 5000; //Time out when no reply in 0.5 seconds
     this.monitorTimeOut = 0;
+    this.monitorMode = false;
 
     // this.client.bind(this.receivePort, this.address);
 
@@ -94,19 +96,6 @@ export class UDPClient {
     return payload;
   }
 
-  private callback(expireTime: number) {
-    console.log(`In callback, expiring in ${expireTime} seconds`);
-    setTimeout(() => {
-      console.log("No more monitoring");
-      this.client.close();
-    }, expireTime * 1000);
-
-    this.client.on("message", (msg, rinfo) => {
-      // unmarshal message
-      this.receiveResponse(msg);
-    });
-  }
-
   //Send Method to cover both Idempotent and Non-Idempotent
   public sendRequest(
     payload: Buffer,
@@ -114,7 +103,6 @@ export class UDPClient {
     packetNo: number,
     noOfPackets: number
   ) {
-    let callback = "";
     const header = constructHeaders(
       requestType,
       this.requestId,
@@ -137,15 +125,21 @@ export class UDPClient {
 
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
+            console.log(msg);
             clearTimeout(closeSocketTimeout);
             clearTimeout(timeOutId);
             // for (const hex of msg) console.log(hex);
-
             // console.log("");
 
-            callback = this.receiveResponse(msg) as string;
-            console.log(callback);
-            if (callback !== "Monitor Success")
+            const callback = this.receiveResponse(msg) as string;
+            if (callback === "Monitor Success") {
+              setTimeout(() => {
+                console.log("No more monitoring");
+                this.monitorMode = false;
+                this.client.close();
+              }, this.monitorTimeOut * 1000);
+              this.monitorMode = true;
+            } else if (!this.monitorMode)
               this.client.close(() => {
                 console.log(`${msg}\n CLOSED SOCKET`);
               });
@@ -161,9 +155,6 @@ export class UDPClient {
             this.client = dgram.createSocket("udp4");
             this.sendRequest(payload, requestType, packetNo, noOfPackets);
           }, this.timeout);
-
-          if (requestType === 5 && callback === "Monitor Success")
-            this.callback(this.monitorTimeOut);
         }
       }
     );
