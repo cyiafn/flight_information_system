@@ -36,7 +36,7 @@ func (r *requestBuffer) ProcessRequest(ctx context.Context, payload []byte) (*re
 	}
 
 	if r.Buffer[key].IsComplete() {
-		delete(r.Buffer, key)
+		defer delete(r.Buffer, key)
 		return r.Buffer[key], true
 	}
 	return nil, false

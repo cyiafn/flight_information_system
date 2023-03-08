@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/cyiafn/flight_information_system/server/custom_errors"
@@ -190,7 +189,6 @@ func getRequestID(request []byte) []byte {
 }
 
 func getCurrentPacketNumber(request []byte) []byte {
-	fmt.Printf("%v\n", bytes.ToInt64(request[requestTypeBytesLength+shortIDBytesLength:requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]))
 	return request[requestTypeBytesLength+shortIDBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]
 }
 
