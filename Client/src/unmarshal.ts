@@ -43,10 +43,13 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
       console.log(
         `These are the following Flight Identifier(s) from the given Source and Destination Location:`
       );
+
+      let resultStr = "";
       for (const [idx, id] of flightIds.entries()) {
-        if (idx === flightIds.length - 1) console.log(`${id}`);
-        console.log(`${id}, `);
+        if (idx === flightIds.length - 1) resultStr += `${id}`;
+        else resultStr += `${id}, `;
       }
+      console.log(resultStr);
       break;
 
     case ResponseType.GetFlightInformationResponseType:
@@ -124,9 +127,9 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
   }
 }
 
-const buffer = Buffer.alloc(20);
-buffer.writeBigInt64LE(BigInt(1678283107));
-buffer.writeDoubleLE(1425.2, 8);
-buffer.writeInt32LE(20, 16);
+// const buffer = Buffer.alloc(20);
+// buffer.writeBigInt64LE(BigInt(1678283107));
+// buffer.writeDoubleLE(1425.2, 8);
+// buffer.writeInt32LE(20, 16);
 
-determineResponseType(buffer, 103);
+// determineResponseType(buffer, 103);

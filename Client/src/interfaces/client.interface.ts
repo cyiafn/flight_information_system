@@ -116,7 +116,7 @@ export type UpdateFlightPriceResponse = {
 };
 
 export type CreateFlightRequest = {
-  Discriminator: RequestType.CreateFlightRequestType;
+  Discriminator?: RequestType.CreateFlightRequestType;
   SourceLocation: string;
   DestinationLocation: string;
   DepartureTime: number;

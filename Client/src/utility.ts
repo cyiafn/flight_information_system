@@ -1,9 +1,6 @@
 export function convertToDateTime(time: bigint) {
   const timeInSeconds = (time * BigInt(1000)).toString();
-  console.log(Number(timeInSeconds));
-  var d = new Date(1678283107000);
-  console.log(d);
-
+  var d = new Date(Number(timeInSeconds));
   const dateFormatted = `${d.getDate()}-${
     d.getMonth() + 1
   }-${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;

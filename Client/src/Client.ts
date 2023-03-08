@@ -62,28 +62,6 @@ export class UDPClient {
     return this.pendingRequests.get(id);
   }
 
-  public sendMultipleRequests(dto: any, requestType: number) {
-    // If dto is q4
-    if (requestType === 5)
-      this.monitorTimeOut = dto.LengthOfMonitorIntervalInSeconds;
-
-    // 26 bytes header message max 499 Bytes
-
-    // Create Request Id for these spliced msg requests
-    const requestId = createRequestId();
-    this.setRequestId(requestId);
-    // Marshal data
-    const payload = marshal(dto);
-
-    // If data is more than 499 Bytes, send in another packet
-    let lengthPayload = payload.length;
-    const totalPackets = Math.ceil(lengthPayload / 486);
-
-    for (let i = 1; i <= totalPackets; i++) {
-      this.sendRequest(payload, requestType, i, totalPackets);
-    }
-  }
-
   private receiveResponse(buffer: Buffer) {
     const header = deconstructHeaders(buffer);
 
@@ -123,8 +101,6 @@ export class UDPClient {
           this.client.on("message", (msg) => {
             clearTimeout(closeSocketTimeout);
             clearTimeout(timeOutId);
-            // for (const hex of msg) console.log(hex);
-            // console.log("");
 
             const callback = this.receiveResponse(
               msg

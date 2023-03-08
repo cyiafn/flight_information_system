@@ -1,7 +1,14 @@
 import * as readline from "readline/promises";
 import { stdin as input, stdout as output } from "process";
 import { UDPClient } from "./Client";
-import { RequestType } from "./interfaces";
+import {
+  createSeatReservationRequest,
+  getFlightIdentifier,
+  getFlightInformation,
+  monitorSeatUpdatesCallbackRequest,
+  updateFlightPriceRequest,
+  createFlightRequest,
+} from "./stubs";
 
 const rl = readline.createInterface({ input, output });
 
@@ -42,9 +49,6 @@ export async function userInterface() {
       break;
   }
 
-  // plus 1 because first one is ping
-  client.sendMultipleRequests(inputs, option + 1);
-
   return inputs;
 }
 
@@ -54,11 +58,7 @@ async function q1() {
     "Input your destination location\n"
   );
 
-  return {
-    Discriminator: RequestType.GetFlightIdentifiersRequestType,
-    SourceLocation: sourceLocation,
-    DestinationLocation: destinationLocation,
-  };
+  getFlightIdentifier(sourceLocation, destinationLocation);
 }
 
 async function q2() {
@@ -66,10 +66,7 @@ async function q2() {
     await rl.question("Input your Flight Identifier Number\n")
   );
 
-  return {
-    Discriminator: RequestType.GetFlightInformationRequestType,
-    FlightIdentifier: flightIdentifier,
-  };
+  getFlightInformation(flightIdentifier);
 }
 
 async function q3() {
@@ -80,11 +77,7 @@ async function q3() {
     await rl.question("Input your Seats to Reserve\n")
   );
 
-  return {
-    Discriminator: RequestType.MakeSeatReservationRequestType,
-    FlightIdentifier: flightIdentifier,
-    SeatsToReserve: seatsToReserve,
-  };
+  createSeatReservationRequest(flightIdentifier, seatsToReserve);
 }
 
 async function q4() {
@@ -95,31 +88,26 @@ async function q4() {
     await rl.question("Input your monitor interval in seconds\n")
   );
 
-  return {
-    Discriminator: RequestType.MonitorSeatUpdatesRequestType,
-    FlightIdentifier: flightIdentifier,
-    LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds,
-  };
+  monitorSeatUpdatesCallbackRequest(
+    flightIdentifier,
+    lengthOfMonitorIntervalInSeconds
+  );
 }
 
 async function q5() {
-  const flightIdentifier = await rl.question(
-    "Input your Flight Identifier Number\n"
+  const flightIdentifier = Number(
+    await rl.question("Input your Flight Identifier Number\n")
   );
   const newPrice = Number(await rl.question("Input your new price\n"));
 
-  return {
-    Discriminator: RequestType.UpdateFlightPriceRequestType,
-    FlightIdentifier: flightIdentifier,
-    NewPrice: newPrice,
-  };
+  updateFlightPriceRequest(flightIdentifier, newPrice);
 }
 
 async function q6() {
-  const {
-    SourceLocation: sourceLocation,
-    DestinationLocation: destinationLocation,
-  } = await q1();
+  const sourceLocation = await rl.question("Input your Source Location\n");
+  const destinationLocation = await rl.question(
+    "Input your destination location\n"
+  );
   const departureTime = Number(
     await rl.question("Input your Departure Time\n")
   );
@@ -130,14 +118,15 @@ async function q6() {
     await rl.question("Input the Total Available Seats of your Flight\n")
   );
 
-  return {
-    Discriminator: RequestType.CreateFlightRequestType,
+  const dto = {
     SourceLocation: sourceLocation,
     DestinationLocation: destinationLocation,
     DepartureTime: departureTime,
     Airfare: airfare,
     TotalAvailableSeats: totalAvailableSeats,
   };
+
+  createFlightRequest(dto);
 }
 
 userInterface();
