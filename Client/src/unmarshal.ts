@@ -1,9 +1,5 @@
 import { Buffer } from "buffer";
-import {
-  ResponseType,
-  StatusCode,
-  UpdateFlightPriceResponse,
-} from "./interfaces";
+import { ResponseType, StatusCode } from "./interfaces";
 
 export function unmarshal(buffer: Buffer, requestType: Number) {
   const statusCode = buffer[0];

@@ -24,14 +24,10 @@ export class UDPClient {
   timeout: number;
   monitorTimeOut: number;
 
-  constructor(
-    address: string,
-    sendPort: number,
-    receivePort: number // Specify the port number (agreed upon) and local ip address of the server.
-  ) {
+  constructor(address: string, sendPort: number) {
     this.address = address; //IP Address of Server
     this.sendPort = sendPort; //Sending Port Number of Client
-    this.receivePort = receivePort; //Listening Port of Client
+    this.receivePort = 0;
     this.client = dgram.createSocket("udp4");
     this.requestId = ""; //Tracking of Request ID
     this.pendingRequests = new Map(); //Storing of Pending Requests
@@ -106,8 +102,9 @@ export class UDPClient {
       this.client.close();
     }, expireTime * 1000);
 
-    this.client.on("message", (msg) => {
+    this.client.on("message", (msg, rinfo) => {
       // unmarshal message
+      console.log(rinfo);
       this.receiveResponse(msg);
     });
   }
@@ -127,6 +124,7 @@ export class UDPClient {
     );
     // Converts the message object into array
     const packet = Buffer.concat([header, payload], 512);
+    console.log(this.client);
     this.client.send(
       packet,
       0,
@@ -139,6 +137,7 @@ export class UDPClient {
         } else {
           console.log(`Sent ${bytes} bytes to server`);
 
+          this.receivePort = this.client.address().port;
           if (requestType === 5) this.callback(this.monitorTimeOut);
           else {
             this.client.on("message", (msg) => {

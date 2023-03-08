@@ -19,7 +19,7 @@ export async function userInterface() {
     option = Number(await rl.question("Wrong Input\n"));
   }
 
-  const client = new UDPClient("127.0.0.1", 8080, 8080);
+  const client = new UDPClient("127.0.0.1", 8080);
   let inputs;
   switch (option) {
     case 1:
@@ -97,6 +97,7 @@ async function q4() {
 
   return {
     Discriminator: RequestType.MonitorSeatUpdatesRequestType,
+    FlightIdentifier: flightIdentifier,
     LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds,
   };
 }
