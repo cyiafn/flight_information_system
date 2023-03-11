@@ -7,6 +7,7 @@ export const createRequestId = customAlphabet(
   9
 );
 
+// Creating header to send over
 export function constructHeaders(
   requestType: number,
   requestIdStr: string,
@@ -23,6 +24,7 @@ export function constructHeaders(
   return header;
 }
 
+// Destructure header to interpret
 export function deconstructHeaders(packet: Buffer) {
   const packetSliced = packet.subarray(0, 26);
   const requestType = packetSliced.readUint8(0);

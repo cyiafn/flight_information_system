@@ -1,15 +1,9 @@
 import dgram from "dgram";
 import { Buffer } from "buffer";
-import {
-  constructHeaders,
-  deconstructHeaders,
-} from "./headers";
-import { PendingRequest, ResponseType } from "./interfaces";
+import { constructHeaders, deconstructHeaders } from "./headers";
+import { ResponseType } from "./interfaces";
 import { unmarshal } from "./unmarshal";
-import { getPacketInformation } from "./utility";
-
-// Connect to Server Via UDP Connection
-// port = 8080
+import { logPacketInformation } from "./utility";
 
 export class UDPClient {
   address: string;
@@ -17,45 +11,32 @@ export class UDPClient {
   receivePort: number;
   client: dgram.Socket;
   requestId: string;
-  pendingRequests: Map<string, PendingRequest>;
   timeout: number;
   monitorTimeOut: number;
   monitorMode: boolean;
 
   constructor(address: string, sendPort: number) {
-    this.address = address; //IP Address of Server
-    this.sendPort = sendPort; //Sending Port Number of Client
-    this.receivePort = 0;
+    this.address = address; // IP Address of Server
+    this.sendPort = sendPort; // Sending Port Number of Client
+    this.receivePort = 0; // Client Port is using
     this.client = dgram.createSocket("udp4");
-    this.requestId = ""; //Tracking of Request ID
-    this.pendingRequests = new Map(); //Storing of Pending Requests
-    this.timeout = 5000; //Time out when no reply in 0.5 seconds
-    this.monitorTimeOut = 0;
-    this.monitorMode = false;
-  }
-
-  //UDPClient get Methods
-  setRequestId(id: string) {
-    this.requestId = id;
-  }
-
-  setPendingRequests(id: string, bufferData: string) {
-    let attempt = 0;
-    if (this.pendingRequests.has(id))
-      attempt = (this.pendingRequests.get(id)?.attempts || 0) + 1;
-
-    this.pendingRequests.set(id, { data: bufferData, attempts: attempt });
-  }
-
-  getPendingRequests(id: string) {
-    return this.pendingRequests.get(id);
+    this.requestId = ""; // Tracking of Request ID
+    this.timeout = 5000; // Time out when no reply in 0.5 seconds
+    this.monitorTimeOut = 0; // Time to set when to stop monitoring
+    this.monitorMode = false; // Whether callback is enable
   }
 
   private receiveResponse(buffer: Buffer) {
     const header = deconstructHeaders(buffer);
     const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
 
-    getPacketInformation(header.requestId, Number(header.packetNo), Number(header.noOfPackets), header.requestType, buffer.subarray(25, 512));
+    logPacketInformation(
+      header.requestId,
+      Number(header.packetNo),
+      Number(header.noOfPackets),
+      header.requestType,
+      buffer.subarray(25, 512)
+    );
 
     if (typeof payload === "string") console.log(payload);
     else return payload;
@@ -74,6 +55,7 @@ export class UDPClient {
       packetNo,
       noOfPackets
     );
+
     // Converts the message object into array
     const packet = Buffer.concat([header, payload], 512);
     this.client.send(
@@ -86,9 +68,14 @@ export class UDPClient {
         if (err) {
           console.log(`Error sending message: ${err}`);
         } else {
+          logPacketInformation(
+            this.requestId,
+            packetNo,
+            noOfPackets,
+            requestType,
+            payload
+          );
 
-          getPacketInformation(this.requestId, packetNo, noOfPackets, requestType, payload);
-          
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
             clearTimeout(closeSocketTimeout);
@@ -114,9 +101,11 @@ export class UDPClient {
 
           const closeSocketTimeout = setTimeout(() => {
             this.client.close(() => {
-              console.log("Socket is closed");
+              console.log(
+                "Socket is closed after trying to send same packet again"
+              );
             });
-          }, 4999);
+          }, this.timeout - 1);
 
           const timeOutId = setTimeout(() => {
             this.client = dgram.createSocket("udp4");
@@ -126,5 +115,4 @@ export class UDPClient {
       }
     );
   }
-
 }

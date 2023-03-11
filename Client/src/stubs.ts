@@ -4,6 +4,7 @@ import { marshal } from "./marshal";
 
 const client = new UDPClient("127.0.0.1", 8080);
 
+// Get flight identifier
 export function getFlightIdentifier(
   sourceLocation: string,
   destinationLocation: string
@@ -21,6 +22,7 @@ export function getFlightIdentifier(
   );
 }
 
+// Get flight information
 export function getFlightInformation(flightIdentifier: number) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
@@ -34,6 +36,7 @@ export function getFlightInformation(flightIdentifier: number) {
   );
 }
 
+// Crate seat reservation
 export function createSeatReservationRequest(
   flightIdentifier: number,
   seatsToReserve: number
@@ -46,6 +49,7 @@ export function createSeatReservationRequest(
   client.sendRequest(payload, RequestType.MakeSeatReservationRequestType, 1, 1);
 }
 
+// Listen for seat updates
 export function monitorSeatUpdatesCallbackRequest(
   flightIdentifier: number,
   lengthOfMonitorIntervalInSeconds: bigint
@@ -58,6 +62,7 @@ export function monitorSeatUpdatesCallbackRequest(
   client.sendRequest(payload, RequestType.MonitorSeatUpdatesRequestType, 1, 1);
 }
 
+// Update Flight Price Request
 export function updateFlightPriceRequest(
   flightIdentifier: number,
   newPrice: number
@@ -70,6 +75,7 @@ export function updateFlightPriceRequest(
   client.sendRequest(payload, RequestType.UpdateFlightPriceRequestType, 1, 1);
 }
 
+// Create Flight Request
 export function createFlightRequest(dto: CreateFlightRequest) {
   const payload = marshal({
     ...dto,
@@ -77,4 +83,3 @@ export function createFlightRequest(dto: CreateFlightRequest) {
 
   client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
 }
-

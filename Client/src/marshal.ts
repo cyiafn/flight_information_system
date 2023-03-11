@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 
+// Generic Marshalling by checking the dataType and marshal accordingly.
 function toByteArray<T>(data: T): Buffer {
   let buffer;
 
@@ -38,6 +39,5 @@ function toByteArray<T>(data: T): Buffer {
 
 export function marshal(data: any): any {
   let requestBuffer = toByteArray(data);
-  
   return requestBuffer;
 }

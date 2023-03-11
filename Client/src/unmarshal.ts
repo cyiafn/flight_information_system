@@ -22,8 +22,8 @@ export function unmarshal(buffer: Buffer, requestType: number) {
   }
 }
 
+// Based on the response type that is part of the response header
 function determineResponseType(buffer: Buffer, responseType: number) {
-  let result;
   let totalAvailableSeats: number, airfare: string, flightIdentifier: number;
   let departureTime: string;
 
@@ -49,6 +49,7 @@ function determineResponseType(buffer: Buffer, responseType: number) {
         if (idx === flightIds.length - 1) resultStr += `${id}`;
         else resultStr += `${id}, `;
       }
+      // Print out the flight ids in a single line
       console.log(resultStr);
       break;
 

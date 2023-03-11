@@ -11,6 +11,7 @@ import {
 
 const rl = readline.createInterface({ input, output });
 
+// Text-based UI to select options
 export async function userInterface() {
   let option = 0;
   console.log("-----Hello, Welcome to Flight Information System-----");
@@ -50,6 +51,7 @@ export async function userInterface() {
   return inputs;
 }
 
+// Get flight identifier based on source location and destination location
 async function q1() {
   const sourceLocation = await rl.question("Input your Source Location\n");
   const destinationLocation = await rl.question(
@@ -59,6 +61,7 @@ async function q1() {
   getFlightIdentifier(sourceLocation, destinationLocation);
 }
 
+// Get Flight Information from the respective flight identifier number.
 async function q2() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
@@ -67,6 +70,8 @@ async function q2() {
   getFlightInformation(flightIdentifier);
 }
 
+// Create seat reservation(s) based on flight identifier number and
+// the number of seats to be reserved.
 async function q3() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
@@ -78,6 +83,7 @@ async function q3() {
   createSeatReservationRequest(flightIdentifier, seatsToReserve);
 }
 
+// Listen for seat number changes
 async function q4() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
@@ -92,6 +98,7 @@ async function q4() {
   );
 }
 
+// Update flight price based on exisitng flight identifier
 async function q5() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
@@ -101,6 +108,8 @@ async function q5() {
   updateFlightPriceRequest(flightIdentifier, newPrice);
 }
 
+// Create a flight request based on the source location, destination location,
+// departure time, airfare and total available seats
 async function q6() {
   const sourceLocation = await rl.question("Input your Source Location\n");
   const destinationLocation = await rl.question(
@@ -127,4 +136,5 @@ async function q6() {
   createFlightRequest(dto);
 }
 
+// Start of the program
 userInterface();

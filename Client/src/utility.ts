@@ -1,3 +1,4 @@
+// Utility function to convert date-time
 export function convertToDateTime(time: bigint) {
   const timeInSeconds = (time * BigInt(1000)).toString();
   const d = new Date(Number(timeInSeconds));
@@ -8,6 +9,7 @@ export function convertToDateTime(time: bigint) {
   return dateFormatted;
 }
 
+// Utility function to find str datatype from buffer
 export function findStrFromBuffer(buffer: Buffer) {
   let idx = 0;
   for (const byte of buffer.values()) {
@@ -17,11 +19,18 @@ export function findStrFromBuffer(buffer: Buffer) {
   return { totalLen: idx + 1, str: buffer.toString("utf-8", 0, idx) };
 }
 
-export function getPacketInformation(packetId: string, packetNo: number, noOfPackets: number, requestType: number, payload: Buffer) {
-  console.log("--------------------------------------------------------------")
-  console.log(`The Packet Id is: ${packetId}.`)
-  console.log(`This is Packet ${packetNo} out of ${noOfPackets}...`)
-  console.log(`This is the Request Type ${requestType}`)
-  console.log(`This is the Payload Received/Sent: ${payload}`)
-  console.log("--------------------------------------------------------------")
+// Print out packet information
+export function logPacketInformation(
+  packetId: string,
+  packetNo: number,
+  noOfPackets: number,
+  requestType: number,
+  payload: Buffer
+) {
+  console.log("--------------------------------------------------------------");
+  console.log(`The Packet Id is: ${packetId}.`);
+  console.log(`This is Packet ${packetNo} out of ${noOfPackets}...`);
+  console.log(`This is the Request Type ${requestType}`);
+  console.log(`This is the Payload Received/Sent: ${payload}`);
+  console.log("--------------------------------------------------------------");
 }
