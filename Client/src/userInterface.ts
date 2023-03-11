@@ -35,7 +35,7 @@ export async function userInterface() {
   );
   console.log("Type q to quit.");
   option = Number(await rl.question("What do you wish to do?\n"));
-  while (option < 1 || option > 8) {
+  while (option < 1 || option > 10) {
     option = Number(await rl.question("Wrong Input\n"));
   }
 
