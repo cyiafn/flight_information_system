@@ -135,24 +135,24 @@ func makeWorkerPoolJobs(addrs []string, payload []byte) []workerPoolJob {
 	return jobs
 }
 
-// addHeaders adds the responseType, requestID, packetNo and totalPacket to header. For the sake of simplicity, we assumed
-// that all callbacks will only use max of 1 packet (512 bytes - headers)
+// addHeaders adds the responseType, requestID, byteBufferArrayNo and totalByteBufferArray to header. For the sake of simplicity, we assumed
+// that all callbacks will only use max of 1 byte array buffer (512 bytes - headers)
 func (c *Client[T]) addHeaders(respType dto.ResponseType, body []byte) []byte {
-	body = c.addTotalPacketToHeader(body, 1)
-	body = c.addPacketNoToHeader(body, 1)
+	body = c.addTotalByteBufferArrayToHeader(body, 1)
+	body = c.addByteBufferArrayNoToHeader(body, 1)
 	body = c.addRequestID(body)
 	body = c.addResponseTypeHeader(respType, body)
 	return body
 }
 
-// addPacketNoToHeader appends the packet number to the header
-func (c *Client[T]) addPacketNoToHeader(response []byte, packetNo int64) []byte {
-	return append(bytes.Int64ToBytes(packetNo), response...)
+// addByteBufferArrayNoToHeader appends the byteBufferArray number to the header
+func (c *Client[T]) addByteBufferArrayNoToHeader(response []byte, byteBufferArrayNo int64) []byte {
+	return append(bytes.Int64ToBytes(byteBufferArrayNo), response...)
 }
 
-// addTotalPacketToHeader appends the total packet number to the header
-func (c *Client[T]) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
-	return append(bytes.Int64ToBytes(totalPacket), response...)
+// addTotalByteBufferArrayToHeader appends the total byteBufferArray number to the header
+func (c *Client[T]) addTotalByteBufferArrayToHeader(response []byte, totalByteBufferArrays int64) []byte {
+	return append(bytes.Int64ToBytes(totalByteBufferArrays), response...)
 }
 
 // addResponseTypeHeader appends the responseType to the header

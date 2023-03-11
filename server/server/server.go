@@ -33,10 +33,10 @@ const (
 	requestTypeBytesLength = 1
 	// requestID length in bytes
 	shortIDBytesLength = 9
-	// currentPacket no in bytes
-	currentPacketBytesLength = 8
-	// totalPacket no in bytes
-	totalPacketsByteLength = 8
+	// currentByteBufferArrayBytesLength no in bytes
+	currentByteBufferArrayBytesLength = 8
+	// totalByteBufferArrayByteLength no in bytes
+	totalByteBufferArrayByteLength = 8
 )
 
 // single instance of server. This will be "singleton"
@@ -44,7 +44,7 @@ var instance *server
 
 // the actual server orchestrating everything
 type server struct {
-	// UDPListener is to listen to packets
+	// UDPListener is to listen to incoming data
 	UDPListener net.Listener
 	// Routes routes a request to a piece of business logic
 	Routes map[dto.RequestType]func(ctx context.Context, request any) (any, error)
@@ -52,7 +52,7 @@ type server struct {
 	Mode serverMode
 	// DuplicateRequestFilter is the filter for duplicate requests
 	DuplicateRequestFilter *duplicate_request.Filter
-	// RequestBuffer is the request buffer for timing out requests, processing multiple packets and allowing for concurrent server access
+	// RequestBuffer is the request buffer for timing out requests, processing multiple byteArrayBuffers and allowing for concurrent server access
 	RequestBuffer *requestBuffer
 }
 
@@ -73,7 +73,7 @@ func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any
 
 	// instantiating all dependencies
 	instance.RequestBuffer = newRequestBuffer()
-	// take note here, that the servers route request function is passed ito the UDPListener such that all packets will be received by the server, processed, routed, executed,
+	// take note here, that the servers route request function is passed ito the UDPListener such that all byteArrayBuffers will be received by the server, processed, routed, executed,
 	// before the data is passed back the UDPListener to send back
 	instance.UDPListener = net.NewUDPListener(getUDPPort(), instance.RouteRequest)
 	instance.UDPListener.StartListening()
@@ -93,11 +93,11 @@ func SpinDown() {
 
 // RouteRequest is the callback function passed into the UDPListener to intercept all received data and process it accordingly
 func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bool) {
-	// Sends the request to the request buffer to check if all packets have arrived or not and whether we should process this right now.
+	// Sends the request to the request buffer to check if all byteArrayBuffers have arrived or not and whether we should process this right now.
 	req, complete := s.RequestBuffer.ProcessRequest(ctx, request)
 	if !complete {
-		// if not all packets have arrived, we do not process it
-		logs.Info("Request is not complete, waiting for all packets: %s", utils.DumpJSON(req))
+		// if not all byte arrays have arrived, we do not process it
+		logs.Info("Request is not complete, waiting for all byte arrays: %s", utils.DumpJSON(req))
 		return nil, false
 	}
 
@@ -121,12 +121,12 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 			return nil, false
 		}
 	}
-	logs.Info("[%s] Received Request Type: %v, Request ID: %s, Request No: %v, Total Packets for Request %v, Marshalled Request: %s",
+	logs.Info("[%s] Received Request Type: %v, Request ID: %s, Request No: %v, Total Byte Array Buffers for Request %v, Marshalled Request: %s",
 		GetIPAddr(ctx),
 		requestType,
 		string(getRequestID(request)),
-		bytes.ToInt64(getCurrentPacketNumber(request)),
-		bytes.ToInt64(getTotalPacketNumber(request)),
+		bytes.ToInt64(getCurrentByteBufferArrayNumber(request)),
+		bytes.ToInt64(getTotalByteBufferArrayNumber(request)),
 		utils.DumpJSON(requestDTO),
 	)
 
@@ -157,18 +157,18 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 		})
 	}
 
-	// our payload might be more than 512 bytes, so we might need to split it into multiple packets. This will not happen in this presentation but the functionality is there
+	// our payload might be more than 512 bytes, so we might need to split it into multiple byte arrays. This will not happen in this presentation but the functionality is there
 	res := s.splitPayloadForSending(requestType, []byte(req.RequestID), resp)
 
 	for i, payload := range res {
-		logs.Info("[%s] Response Payload #%v out of %v: Request Type: %v, Request ID: %s, Request No: %v, Total Packets for Request %v, Marshalled Request: %s",
+		logs.Info("[%s] Response Payload #%v out of %v: Request Type: %v, Request ID: %s, Request No: %v, Total Byte Arrays for Request %v, Marshalled Request: %s",
 			GetIPAddr(ctx),
 			i+1,
 			len(res),
 			getRequestType(payload),
 			string(getRequestID(payload)),
-			bytes.ToInt64(getCurrentPacketNumber(payload)),
-			bytes.ToInt64(getTotalPacketNumber(payload)),
+			bytes.ToInt64(getCurrentByteBufferArrayNumber(payload)),
+			bytes.ToInt64(getTotalByteBufferArrayNumber(payload)),
 			utils.DumpJSON(wrappedResp),
 		)
 	}
@@ -177,7 +177,7 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 	return res, true
 }
 
-// splitPayloadForSending splits the payload into multiple packets to send
+// splitPayloadForSending splits the payload into multiple byte array buffers to send
 func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID []byte, payload []byte) [][]byte {
 	// if the payload length == 0 we can hardcode this
 	if len(payload) == 0 {
@@ -203,24 +203,24 @@ func (s *server) splitPayloadForSending(requestType dto.RequestType, requestID [
 
 // getTotalBytesInHeader returns header size
 func (s *server) getTotalBytesInHeader() int {
-	return requestTypeBytesLength + shortIDBytesLength + currentPacketBytesLength + totalPacketsByteLength
+	return requestTypeBytesLength + shortIDBytesLength + currentByteBufferArrayBytesLength + totalByteBufferArrayByteLength
 }
 
 // addHeaders adds headers to a payload
-func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, packetNo int64, totalPacket int64, response []byte) []byte {
-	response = s.addTotalPacketToHeader(response, totalPacket)
-	response = s.addPacketNoToHeader(response, packetNo)
+func (s *server) addHeaders(requestType dto.RequestType, requestID []byte, byteArrayBufferNo int64, totalByteArrayBuffer int64, response []byte) []byte {
+	response = s.addTotalByteArraysToHeader(response, totalByteArrayBuffer)
+	response = s.addByteArrayBufferNoToHeader(response, byteArrayBufferNo)
 	response = s.addRequestIDToHeader(response, requestID)
 	response = s.addResponseTypeHeader(response, dto.GetResponseType(requestType))
 	return response
 }
 
-func (s *server) addPacketNoToHeader(response []byte, packetNo int64) []byte {
-	return append(bytes.Int64ToBytes(packetNo+1), response...)
+func (s *server) addByteArrayBufferNoToHeader(response []byte, byteArrayBufferNo int64) []byte {
+	return append(bytes.Int64ToBytes(byteArrayBufferNo+1), response...)
 }
 
-func (s *server) addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
-	return append(bytes.Int64ToBytes(totalPacket), response...)
+func (s *server) addTotalByteArraysToHeader(response []byte, totalByteArrayBuffers int64) []byte {
+	return append(bytes.Int64ToBytes(totalByteArrayBuffers), response...)
 }
 
 func (s *server) addRequestIDToHeader(response []byte, requestID []byte) []byte {
@@ -250,16 +250,16 @@ func getRequestID(request []byte) []byte {
 	return dest
 }
 
-func getCurrentPacketNumber(request []byte) []byte {
-	return request[requestTypeBytesLength+shortIDBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength]
+func getCurrentByteBufferArrayNumber(request []byte) []byte {
+	return request[requestTypeBytesLength+shortIDBytesLength : requestTypeBytesLength+shortIDBytesLength+currentByteBufferArrayBytesLength]
 }
 
-func getTotalPacketNumber(request []byte) []byte {
-	return request[requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength : requestTypeBytesLength+shortIDBytesLength+currentPacketBytesLength+totalPacketsByteLength]
+func getTotalByteBufferArrayNumber(request []byte) []byte {
+	return request[requestTypeBytesLength+shortIDBytesLength+currentByteBufferArrayBytesLength : requestTypeBytesLength+shortIDBytesLength+currentByteBufferArrayBytesLength+totalByteBufferArrayByteLength]
 }
 
 func getRequestBody(request []byte) []byte {
-	return request[requestTypeBytesLength+shortIDBytesLength+totalPacketsByteLength+currentPacketBytesLength:]
+	return request[requestTypeBytesLength+shortIDBytesLength+totalByteBufferArrayByteLength+currentByteBufferArrayBytesLength:]
 }
 
 func GetIPAddr(ctx context.Context) string {

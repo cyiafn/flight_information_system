@@ -25,21 +25,21 @@ func TestSendData(t *testing.T) {
 }
 
 func addHeaders(respType dto.ResponseType, body []byte) []byte {
-	body = addTotalPacketToHeader(body, 1)
-	body = addPacketNoToHeader(body, 1)
+	body = addTotalByteBuffersToHeader(body, 1)
+	body = addByteBufferNoToHeader(body, 1)
 	body = addRequestID(body)
 	body = addResponseTypeHeader(respType, body)
 	return body
 }
 
-// addPacketNoToHeader appends the packet number to the header
-func addPacketNoToHeader(response []byte, packetNo int64) []byte {
-	return append(bytes.Int64ToBytes(packetNo), response...)
+// addByteBufferNoToHeader appends the byteBufferArray number to the header
+func addByteBufferNoToHeader(response []byte, byteBufferArrayNo int64) []byte {
+	return append(bytes.Int64ToBytes(byteBufferArrayNo), response...)
 }
 
-// addTotalPacketToHeader appends the total packet number to the header
-func addTotalPacketToHeader(response []byte, totalPacket int64) []byte {
-	return append(bytes.Int64ToBytes(totalPacket), response...)
+// addTotalByteBuffersToHeader appends the total byteBufferArray number to the header
+func addTotalByteBuffersToHeader(response []byte, totalByteBufferArray int64) []byte {
+	return append(bytes.Int64ToBytes(totalByteBufferArray), response...)
 }
 
 // addResponseTypeHeader appends the responseType to the header

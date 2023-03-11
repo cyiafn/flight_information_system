@@ -104,10 +104,10 @@ func (u *UDPListener) handleIncomingData(ctx context.Context, buf []byte, addr n
 		return
 	}
 
-	// for each "packet" buffer, we send it back to the client
-	for _, packet := range resp {
-		packet := packet
-		_, err := u.listener.WriteTo(packet, addr)
+	// for each byte array buffer, we send it back to the client
+	for _, buf := range resp {
+		buf := buf
+		_, err := u.listener.WriteTo(buf, addr)
 		if err != nil {
 			logs.Error("unable to reply, err: %v", err)
 			return

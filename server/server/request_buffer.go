@@ -39,15 +39,15 @@ type requestBuffer struct {
 	Buffer map[string]*request
 }
 
-// ProcessRequest checks if all the packets have arrived, if not, it will not release the request for processing
+// ProcessRequest checks if all the byte arrays for a request have arrived, if not, it will not release the request for processing
 func (r *requestBuffer) ProcessRequest(ctx context.Context, payload []byte) (*request, bool) {
 	// generates the key for the buffer key
 	key := makeBufferKey(GetIPAddr(ctx), string(getRequestID(payload)))
 	r.RLock()
 	request, ok := r.Buffer[key]
 	if ok {
-		// if there is such a request, we can simply se the packet number in the rquest
-		request.Body[bytes.ToInt64(getCurrentPacketNumber(payload))] = getRequestBody(payload)
+		// if there is such a request, we can simply use the byte array number in the request
+		request.Body[bytes.ToInt64(getCurrentByteBufferArrayNumber(payload))] = getRequestBody(payload)
 		r.RUnlock()
 	} else {
 		r.RUnlock()
@@ -63,7 +63,7 @@ func (r *requestBuffer) ProcessRequest(ctx context.Context, payload []byte) (*re
 			delete(r.Buffer, key)
 			r.Unlock()
 		}()
-		// if all the packets are here, return the packets
+		// if all the byteBufferArrays are here, return the request for processing
 		return r.Buffer[key], true
 	}
 	return nil, false
@@ -83,7 +83,7 @@ func (r *requestBuffer) StartCleanUp() {
 						continue
 					}
 					if _, ok := r.Buffer[key]; ok {
-						logs.Info("Timing out requestID: %s as it has exceeded 5 seconds to deliver all packets.", value.RequestID)
+						logs.Info("Timing out requestID: %s as it has exceeded 5 seconds to deliver all byte arrays.", value.RequestID)
 						r.RUnlock()
 						r.Lock()
 						delete(r.Buffer, key)
@@ -99,18 +99,17 @@ func (r *requestBuffer) StartCleanUp() {
 
 // newRequest creates a new request
 func newRequest(ctx context.Context, payload []byte) *request {
-	currentPacket := bytes.ToInt64(getCurrentPacketNumber(payload))
-	totalPackets := bytes.ToInt64(getTotalPacketNumber(payload))
+	currentByteArrayBuffer := bytes.ToInt64(getCurrentByteBufferArrayNumber(payload))
+	totalByteArrayBuffer := bytes.ToInt64(getTotalByteBufferArrayNumber(payload))
 	req := &request{
-		IPAddr:        GetIPAddr(ctx),
-		RequestID:     string(getRequestID(payload)),
-		Type:          getRequestType(payload),
-		TimeCreated:   time.Now(),
-		CurrentPacket: currentPacket,
-		TotalPackets:  totalPackets,
-		Body:          make([][]byte, totalPackets),
+		IPAddr:               GetIPAddr(ctx),
+		RequestID:            string(getRequestID(payload)),
+		Type:                 getRequestType(payload),
+		TimeCreated:          time.Now(),
+		TotalByteArrayBuffer: totalByteArrayBuffer,
+		Body:                 make([][]byte, totalByteArrayBuffer),
 	}
-	req.Body[currentPacket-1] = getRequestBody(payload)
+	req.Body[currentByteArrayBuffer-1] = getRequestBody(payload)
 	return req
 }
 
@@ -120,10 +119,9 @@ type request struct {
 	RequestID string
 	Type      dto.RequestType
 
-	TimeCreated   time.Time
-	CurrentPacket int64
-	TotalPackets  int64
-	Body          [][]byte
+	TimeCreated          time.Time
+	TotalByteArrayBuffer int64
+	Body                 [][]byte
 }
 
 // TimedOut checks if a request is timed out or not
@@ -131,7 +129,7 @@ func (r *request) TimedOut() bool {
 	return r.TimeCreated.Add(cleanUpDuration).After(time.Now())
 }
 
-// IsComplete checks if all the packets are here
+// IsComplete checks if all the byte arrays are here
 func (r *request) IsComplete() bool {
 	count := int64(0)
 	for _, bodyPayload := range r.Body {
@@ -139,10 +137,10 @@ func (r *request) IsComplete() bool {
 			count += 1
 		}
 	}
-	return count == r.TotalPackets
+	return count == r.TotalByteArrayBuffer
 }
 
-// CompileRequest gets all the compiled bodies of the different packets.
+// CompileRequest gets all the compiled bodies of the different byte arrays.
 func (r *request) CompileRequest() (dto.RequestType, []byte) {
 	var response []byte
 
