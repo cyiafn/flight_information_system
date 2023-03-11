@@ -169,7 +169,7 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 			string(getRequestID(payload)),
 			bytes.ToInt64(getCurrentPacketNumber(payload)),
 			bytes.ToInt64(getTotalPacketNumber(payload)),
-			utils.DumpJSON(resp),
+			utils.DumpJSON(wrappedResp),
 		)
 	}
 
