@@ -67,7 +67,7 @@ export function monitorSeatUpdatesCallbackRequest(
 // Update Flight Price Request
 export function updateFlightPriceRequest(
   flightIdentifier: number,
-  newPrice: number
+  newPrice: string
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
@@ -112,7 +112,7 @@ export function createFlightWithResponseLost(dto: CreateFlightRequest) {
 // Simulate update Flight Price with request lost
 export function updateFlightPriceRequestWithRequestLost(
   flightIdentifier: number,
-  newPrice: number
+  newPrice: string
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
@@ -135,7 +135,7 @@ export function updateFlightPriceRequestWithRequestLost(
 // Simulate update Flight Price with response lost
 export function updateFlightPriceRequestWithResponseLost(
   flightIdentifier: number,
-  newPrice: number
+  newPrice: string
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,

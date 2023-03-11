@@ -5,15 +5,18 @@ function toByteArray<T>(data: T): Buffer {
   let buffer;
 
   if (Buffer.isBuffer(data)) return data;
-  else if (typeof data === "string") {
+  else if (typeof data === "string" && isNaN(data as any)) {
     return Buffer.from(data + "\0");
-  } else if (typeof data === "number") {
+  } else if (
+    typeof data !== "bigint" &&
+    (typeof data === "number" || !isNaN(Number(data)))
+  ) {
     if (!Number.isInteger(data)) {
       buffer = Buffer.alloc(8);
-      buffer.writeDoubleLE(data);
+      buffer.writeDoubleLE(data as number);
     } else {
       buffer = Buffer.alloc(4);
-      buffer.writeInt32LE(data);
+      buffer.writeInt32LE(data as number);
     }
     return buffer;
   } else if (typeof data === "bigint") {

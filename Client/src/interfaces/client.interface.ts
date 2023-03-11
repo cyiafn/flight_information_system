@@ -84,7 +84,7 @@ export type CreateFlightRequest = {
   SourceLocation: string;
   DestinationLocation: string;
   DepartureTime: bigint;
-  Airfare: number;
+  Airfare: string;
   TotalAvailableSeats: number;
 };
 

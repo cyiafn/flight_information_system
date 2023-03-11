@@ -128,7 +128,9 @@ async function q5() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
   );
-  const newPrice = Number(await rl.question("Input your new price\n"));
+  const newPrice = Number(await rl.question("Input your new price\n")).toFixed(
+    2
+  );
 
   updateFlightPriceRequest(flightIdentifier, newPrice);
 }
@@ -145,7 +147,7 @@ async function q6() {
   );
   const airfare = Number(
     await rl.question("Input the Airfare of your Flight\n")
-  );
+  ).toFixed(2);
   const totalAvailableSeats = Number(
     await rl.question("Input the Total Available Seats of your Flight\n")
   );
@@ -172,7 +174,7 @@ async function q7() {
   );
   const airfare = Number(
     await rl.question("Input the Airfare of your Flight\n")
-  );
+  ).toFixed(2);
   const totalAvailableSeats = Number(
     await rl.question("Input the Total Available Seats of your Flight\n")
   );
@@ -199,7 +201,7 @@ async function q8() {
   );
   const airfare = Number(
     await rl.question("Input the Airfare of your Flight\n")
-  );
+  ).toFixed(2);
   const totalAvailableSeats = Number(
     await rl.question("Input the Total Available Seats of your Flight\n")
   );
@@ -219,7 +221,9 @@ async function q9() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
   );
-  const newPrice = Number(await rl.question("Input your new price\n"));
+  const newPrice = Number(await rl.question("Input your new price\n")).toFixed(
+    2
+  );
 
   updateFlightPriceRequestWithRequestLost(flightIdentifier, newPrice);
 }
@@ -229,7 +233,9 @@ async function q10() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
   );
-  const newPrice = Number(await rl.question("Input your new price\n"));
+  const newPrice = Number(await rl.question("Input your new price\n")).toFixed(
+    2
+  );
 
   updateFlightPriceRequestWithResponseLost(flightIdentifier, newPrice);
 }
