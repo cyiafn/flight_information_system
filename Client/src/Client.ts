@@ -1,6 +1,10 @@
 import dgram from "dgram";
 import { Buffer } from "buffer";
-import { constructHeaders, deconstructHeaders } from "./headers";
+import {
+  constructHeaders,
+  createRequestId,
+  deconstructHeaders,
+} from "./headers";
 import { ResponseType } from "./interfaces";
 import { unmarshal } from "./unmarshal";
 import { logPacketInformation } from "./utility";
@@ -28,15 +32,15 @@ export class UDPClient {
 
   private receiveResponse(buffer: Buffer) {
     const header = deconstructHeaders(buffer);
-    const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
 
     logPacketInformation(
       header.requestId,
       Number(header.packetNo),
       Number(header.noOfPackets),
       header.requestType,
-      buffer.subarray(25, 512)
+      undefined
     );
+    const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
 
     if (typeof payload === "string") console.log(payload);
     else return payload;
@@ -49,6 +53,7 @@ export class UDPClient {
     packetNo: number,
     noOfPackets: number
   ) {
+    this.requestId = createRequestId();
     const header = constructHeaders(
       requestType,
       this.requestId,
