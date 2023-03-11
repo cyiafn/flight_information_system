@@ -17,9 +17,10 @@ const (
 // This is CONCURRENT-SAFE
 type Filter struct {
 	sync.RWMutex
-	KnownRequests map[string]time.Time
-	cleanUpTicker *time.Ticker
-	cleanupChan   chan struct{}
+	KnownRequests       map[string]time.Time
+	KnownRequestReplies map[string][][]byte
+	cleanUpTicker       *time.Ticker
+	cleanupChan         chan struct{}
 }
 
 // NewFilter instantiates a new filter object
@@ -32,6 +33,18 @@ func NewFilter() *Filter {
 
 	go filter.cleanUp()
 	return filter
+}
+
+func (d *Filter) RegisterResponse(requestID string, response [][]byte) {
+	d.Lock()
+	defer d.Unlock()
+	d.KnownRequestReplies[requestID] = response
+}
+
+func (d *Filter) GetKnownResponse(requestID string) [][]byte {
+	d.RLock()
+	defer d.RUnlock()
+	return d.KnownRequestReplies[requestID]
 }
 
 // IsAllowed simply checks if there is a duplicate requestID previously or not, if there is, it will return false, else it will add the new request and return true
@@ -72,6 +85,7 @@ func (d *Filter) cleanUp() {
 			for requestID, createTime := range d.KnownRequests {
 				if d.isIDExpired(createTime) {
 					delete(d.KnownRequests, requestID)
+					delete(d.KnownRequestReplies, requestID)
 				}
 			}
 

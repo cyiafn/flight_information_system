@@ -104,8 +104,9 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 	// if we decide to process it and it is at most once server mode, we need to check if it is allowed (if it was a duplicate request)
 	// if the filter does not allow us to process, we discard this request.
 	if s.Mode == atMostOnceServerMode && !s.DuplicateRequestFilter.IsAllowed(req.RequestID) {
-		logs.Warn("RequestID: %s was repeated, aborting request", req.RequestID)
-		return nil, false
+		logs.Warn("RequestID: %s was repeated, sending cached response", req.RequestID)
+
+		return s.DuplicateRequestFilter.GetKnownResponse(req.RequestID), true
 	}
 
 	// We take the request object and compile it into the necessary information
@@ -159,6 +160,10 @@ func (s *server) RouteRequest(ctx context.Context, request []byte) ([][]byte, bo
 
 	// our payload might be more than 512 bytes, so we might need to split it into multiple byte arrays. This will not happen in this presentation but the functionality is there
 	res := s.splitPayloadForSending(requestType, []byte(req.RequestID), resp)
+
+	if s.Mode == atMostOnceServerMode {
+		s.DuplicateRequestFilter.RegisterResponse(req.RequestID, res)
+	}
 
 	for i, payload := range res {
 		logs.Info("[%s] Response Payload #%v out of %v: Request Type: %v, Request ID: %s, Request No: %v, Total Byte Arrays for Request %v, Marshalled Request: %s",
