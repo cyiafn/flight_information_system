@@ -25,14 +25,15 @@ export function logPacketInformation(
   packetNo: number,
   noOfPackets: number,
   requestType: number,
-  payload: any
+  payload: Buffer | undefined
 ) {
   console.log("--------------------Packet Information-----------------------");
   console.log(`The Packet Id is: ${packetId}`);
   console.log(`This is Packet ${packetNo} out of ${noOfPackets}`);
   console.log(`This is the Request Type ${requestType}`);
-  if (requestType >= 2 && requestType <= 7)
-    console.log(`This is the Payload Sent: ${payload}`);
+  if (requestType >= 2 && requestType <= 7) {
+    console.log(`This is the Payload Sent: ${payload?.toString("hex")}`);
+  }
   console.log(
     "--------------------------------------------------------------\n"
   );
