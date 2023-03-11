@@ -7,6 +7,8 @@ import {
   monitorSeatUpdatesCallbackRequest,
   updateFlightPriceRequest,
   createFlightRequest,
+  getFlightInformationWithRequestLost,
+  getFlightInformationWithResponseLost,
 } from "./stubs";
 
 const rl = readline.createInterface({ input, output });
@@ -21,8 +23,10 @@ export async function userInterface() {
   console.log("4. Monitor Flight Seats Information");
   console.log("5. Update The Flight Ticket Price");
   console.log("6. Create a Flight Request");
+  console.log("7. Query Flight Information with Request Lost");
+  console.log("8. Query Flight Information with Response Lost");
   option = Number(await rl.question("What do you wish to do?\n"));
-  while (option < 1 || option > 6) {
+  while (option < 1 || option > 8) {
     option = Number(await rl.question("Wrong Input\n"));
   }
 
@@ -45,6 +49,12 @@ export async function userInterface() {
       break;
     case 6:
       inputs = await q6();
+      break;
+    case 7:
+      inputs = await q7();
+      break;
+    case 8:
+      inputs = await q8();
       break;
   }
 
@@ -134,6 +144,26 @@ async function q6() {
   };
 
   createFlightRequest(dto);
+}
+
+// Get Flight Information from the respective flight identifier number
+// WITH REQUEST LOST
+async function q7() {
+  const flightIdentifier = Number(
+    await rl.question("Input your Flight Identifier Number\n")
+  );
+
+  getFlightInformationWithRequestLost(flightIdentifier);
+}
+
+// Get Flight Information from the respective flight identifier number
+// WITH RESPONSE LOST
+async function q8() {
+  const flightIdentifier = Number(
+    await rl.question("Input your Flight Identifier Number\n")
+  );
+
+  getFlightInformationWithResponseLost(flightIdentifier);
 }
 
 // Start of the program

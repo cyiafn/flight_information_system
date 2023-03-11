@@ -51,9 +51,11 @@ export class UDPClient {
     payload: Buffer,
     requestType: number,
     packetNo: number,
-    noOfPackets: number
+    noOfPackets: number,
+    responseLost = false
   ) {
-    this.requestId = createRequestId();
+    if (this.requestId === "") this.requestId = createRequestId();
+
     const header = constructHeaders(
       requestType,
       this.requestId,
@@ -83,12 +85,15 @@ export class UDPClient {
 
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
-            clearTimeout(closeSocketTimeout);
-            clearTimeout(timeOutId);
+            let callback;
+            if (!responseLost) {
+              clearTimeout(timeOutId);
 
-            const callback = this.receiveResponse(
-              msg
-            ) as ResponseType.MonitorSeatUpdatesResponseType;
+              callback = this.receiveResponse(
+                msg
+              ) as ResponseType.MonitorSeatUpdatesResponseType;
+              responseLost = false;
+            }
 
             // Dealing with callback
             if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
@@ -100,17 +105,9 @@ export class UDPClient {
               this.monitorMode = true;
             } else if (!this.monitorMode)
               this.client.close(() => {
-                console.log(`Socket is closed after receiving acknowledgement`);
+                console.log(`Socket is closed after sending packet`);
               });
           });
-
-          const closeSocketTimeout = setTimeout(() => {
-            this.client.close(() => {
-              console.log(
-                "Socket is closed after trying to send same packet again"
-              );
-            });
-          }, this.timeout - 1);
 
           const timeOutId = setTimeout(() => {
             this.client = dgram.createSocket("udp4");

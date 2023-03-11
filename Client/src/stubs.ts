@@ -83,3 +83,36 @@ export function createFlightRequest(dto: CreateFlightRequest) {
 
   client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
 }
+
+export function getFlightInformationWithRequestLost(flightIdentifier: number) {
+  const payload = marshal({
+    FlightIdentifier: flightIdentifier,
+  });
+
+  console.log(
+    "Sending a packet but obviously will fail, will resend in 5 sec..."
+  );
+  setTimeout(
+    () =>
+      client.sendRequest(
+        payload,
+        RequestType.GetFlightInformationRequestType,
+        1,
+        1
+      ),
+    5000
+  );
+}
+export function getFlightInformationWithResponseLost(flightIdentifier: number) {
+  const payload = marshal({
+    FlightIdentifier: flightIdentifier,
+  });
+
+  client.sendRequest(
+    payload,
+    RequestType.GetFlightInformationRequestType,
+    1,
+    1,
+    true
+  );
+}
