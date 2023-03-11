@@ -2,9 +2,10 @@
 export function convertToDateTime(time: bigint) {
   const timeInSeconds = (time * BigInt(1000)).toString();
   const d = new Date(Number(timeInSeconds));
+  console.log(d);
   const dateFormatted = `${d.getDate()}-${
     d.getMonth() + 1
-  }-${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+  }-${d.getFullYear()} ${d.getUTCHours()}H:${d.getMinutes()}M`;
 
   return dateFormatted;
 }
