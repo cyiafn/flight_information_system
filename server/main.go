@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/cyiafn/flight_information_system/server/database"
 	"github.com/cyiafn/flight_information_system/server/dto"
 	"github.com/cyiafn/flight_information_system/server/handlers"
@@ -18,10 +19,13 @@ func init() {
 func main() {
 	// handles panics
 	defer utils.HandlePanic()
-	// spinsdown server upon terminating application
+	// spins down server upon terminating application
 	utils.GracefulShutdown(server.SpinDown)
 	// boots up the server
-	server.Boot(routes, true)
+	atMostOnce := flag.String("amo", "true", "at most once invocation")
+	flag.Parse()
+
+	server.Boot(routes, *atMostOnce == "true")
 }
 
 // routes are the  routes from request to handlers
