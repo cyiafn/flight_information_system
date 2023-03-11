@@ -1,4 +1,4 @@
-// | uint8, 1 byte: request type | string, 10 bytes: requestID | uint8: Packet no. | uint8: no. of Packets | rest of payload
+// | uint8, 1 byte: request type | string, 10 bytes: requestID | uint8: Buffer no. | uint8: no. of Buffer Arrays | rest of payload
 
 import { customAlphabet } from "nanoid";
 
@@ -11,31 +11,31 @@ export const createRequestId = customAlphabet(
 export function constructHeaders(
   requestType: number,
   requestIdStr: string,
-  packetNo: number,
-  noOfPackets: number
+  byteArrayBufferNo: number,
+  totalByteArrayBuffers: number
 ) {
   const header = Buffer.allocUnsafe(26);
 
-  header.writeInt8(requestType, 0);
+  header.writeUInt8(requestType, 0);
   header.write(requestIdStr, 1);
-  header.writeBigInt64LE(BigInt(packetNo), 10);
-  header.writeBigInt64LE(BigInt(noOfPackets), 18);
+  header.writeBigInt64LE(BigInt(byteArrayBufferNo), 10);
+  header.writeBigInt64LE(BigInt(totalByteArrayBuffers), 18);
 
   return header;
 }
 
 // Destructure header to interpret
-export function deconstructHeaders(packet: Buffer) {
-  const packetSliced = packet.subarray(0, 26);
-  const requestType = packetSliced.readInt8(0);
-  const requestIdStr = packetSliced.toString("utf-8", 1, 10);
-  const packetNo = packetSliced.readBigInt64LE(10);
-  const noOfPackets = packetSliced.readBigInt64LE(18);
+export function deconstructHeaders(buffer: Buffer) {
+  const bufferSliced = buffer.subarray(0, 26);
+  const requestType = bufferSliced.readUInt8(0);
+  const requestIdStr = bufferSliced.toString("utf-8", 1, 10);
+  const byteArrayBufferNo = bufferSliced.readBigInt64LE(10);
+  const totalByteArrayBuffers = bufferSliced.readBigInt64LE(18);
 
   return {
     requestType: requestType,
     requestId: requestIdStr,
-    packetNo: packetNo,
-    noOfPackets: noOfPackets,
+    byteArrayBufferNo: byteArrayBufferNo,
+    totalByteArrayBuffers: totalByteArrayBuffers,
   };
 }

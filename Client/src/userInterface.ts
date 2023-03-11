@@ -7,8 +7,8 @@ import {
   monitorSeatUpdatesCallbackRequest,
   updateFlightPriceRequest,
   createFlightRequest,
-  getFlightInformationWithRequestLost,
-  getFlightInformationWithResponseLost,
+  createFlightWithRequestLost,
+  createFlightWithResponseLost,
 } from "./stubs";
 
 const rl = readline.createInterface({ input, output });
@@ -23,8 +23,9 @@ export async function userInterface() {
   console.log("4. Monitor Flight Seats Information");
   console.log("5. Update The Flight Ticket Price");
   console.log("6. Create a Flight Request");
-  console.log("7. Query Flight Information with Request Lost");
-  console.log("8. Query Flight Information with Response Lost");
+  console.log("7. Create a Flight Request with Request Lost");
+  console.log("8. Create a Flight Request with Response Lost");
+  console.log("Type q to quit.");
   option = Number(await rl.question("What do you wish to do?\n"));
   while (option < 1 || option > 8) {
     option = Number(await rl.question("Wrong Input\n"));
@@ -57,8 +58,8 @@ export async function userInterface() {
       inputs = await q8();
       break;
   }
-
-  return inputs;
+  console.log(option);
+  return String(option);
 }
 
 // Get flight identifier based on source location and destination location
@@ -68,7 +69,7 @@ async function q1() {
     "Input your destination location\n"
   );
 
-  getFlightIdentifier(sourceLocation, destinationLocation);
+  await getFlightIdentifier(sourceLocation, destinationLocation);
 }
 
 // Get Flight Information from the respective flight identifier number.
@@ -146,25 +147,68 @@ async function q6() {
   createFlightRequest(dto);
 }
 
-// Get Flight Information from the respective flight identifier number
+// Create a flight request based on the source location, destination location,
 // WITH REQUEST LOST
 async function q7() {
-  const flightIdentifier = Number(
-    await rl.question("Input your Flight Identifier Number\n")
+  const sourceLocation = await rl.question("Input your Source Location\n");
+  const destinationLocation = await rl.question(
+    "Input your destination location\n"
+  );
+  const departureTime = Number(
+    await rl.question("Input your Departure Time\n")
+  );
+  const airfare = Number(
+    await rl.question("Input the Airfare of your Flight\n")
+  );
+  const totalAvailableSeats = Number(
+    await rl.question("Input the Total Available Seats of your Flight\n")
   );
 
-  getFlightInformationWithRequestLost(flightIdentifier);
+  const dto = {
+    SourceLocation: sourceLocation,
+    DestinationLocation: destinationLocation,
+    DepartureTime: BigInt(departureTime),
+    Airfare: airfare,
+    TotalAvailableSeats: totalAvailableSeats,
+  };
+
+  createFlightWithRequestLost(dto);
 }
 
-// Get Flight Information from the respective flight identifier number
+// Create a flight request based on the source location, destination location,
 // WITH RESPONSE LOST
 async function q8() {
-  const flightIdentifier = Number(
-    await rl.question("Input your Flight Identifier Number\n")
+  const sourceLocation = await rl.question("Input your Source Location\n");
+  const destinationLocation = await rl.question(
+    "Input your destination location\n"
+  );
+  const departureTime = Number(
+    await rl.question("Input your Departure Time\n")
+  );
+  const airfare = Number(
+    await rl.question("Input the Airfare of your Flight\n")
+  );
+  const totalAvailableSeats = Number(
+    await rl.question("Input the Total Available Seats of your Flight\n")
   );
 
-  getFlightInformationWithResponseLost(flightIdentifier);
+  const dto = {
+    SourceLocation: sourceLocation,
+    DestinationLocation: destinationLocation,
+    DepartureTime: BigInt(departureTime),
+    Airfare: airfare,
+    TotalAvailableSeats: totalAvailableSeats,
+  };
+
+  createFlightWithResponseLost(dto);
+}
+
+async function main() {
+  let input = "";
+  while (input !== "q") {
+    input = await userInterface();
+  }
 }
 
 // Start of the program
-userInterface();
+main();

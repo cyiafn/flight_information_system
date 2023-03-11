@@ -5,7 +5,7 @@ import { marshal } from "./marshal";
 const client = new UDPClient("127.0.0.1", 8080);
 
 // Get flight identifier
-export function getFlightIdentifier(
+export async function getFlightIdentifier(
   sourceLocation: string,
   destinationLocation: string
 ) {
@@ -14,12 +14,13 @@ export function getFlightIdentifier(
     DestinationLocation: destinationLocation,
   });
 
-  client.sendRequest(
+  await client.sendRequest(
     payload,
     RequestType.GetFlightIdentifiersRequestType,
     1,
     1
   );
+  console.log("HELLO");
 }
 
 // Get flight information
@@ -60,6 +61,7 @@ export function monitorSeatUpdatesCallbackRequest(
   });
 
   client.sendRequest(payload, RequestType.MonitorSeatUpdatesRequestType, 1, 1);
+  client.setMonitorTimeout(lengthOfMonitorIntervalInSeconds);
 }
 
 // Update Flight Price Request
@@ -85,9 +87,9 @@ export function createFlightRequest(dto: CreateFlightRequest) {
 }
 
 // Simulate Get Flight Information with request lost from server
-export function getFlightInformationWithRequestLost(flightIdentifier: number) {
+export function createFlightWithRequestLost(dto: CreateFlightRequest) {
   const payload = marshal({
-    FlightIdentifier: flightIdentifier,
+    ...dto,
   });
 
   console.log(
@@ -95,27 +97,16 @@ export function getFlightInformationWithRequestLost(flightIdentifier: number) {
   );
   setTimeout(
     () =>
-      client.sendRequest(
-        payload,
-        RequestType.GetFlightInformationRequestType,
-        1,
-        1
-      ),
+      client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1),
     5000
   );
 }
 
 // Simulate Get Flight Information with response lost in client
-export function getFlightInformationWithResponseLost(flightIdentifier: number) {
+export function createFlightWithResponseLost(dto: CreateFlightRequest) {
   const payload = marshal({
-    FlightIdentifier: flightIdentifier,
+    ...dto,
   });
 
-  client.sendRequest(
-    payload,
-    RequestType.GetFlightInformationRequestType,
-    1,
-    1,
-    true
-  );
+  client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1, true);
 }

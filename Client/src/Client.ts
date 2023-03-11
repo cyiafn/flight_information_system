@@ -35,8 +35,8 @@ export class UDPClient {
 
     logPacketInformation(
       header.requestId,
-      Number(header.packetNo),
-      Number(header.noOfPackets),
+      Number(header.byteArrayBufferNo),
+      Number(header.totalByteArrayBuffers),
       header.requestType,
       undefined
     );
@@ -46,12 +46,15 @@ export class UDPClient {
     else return payload;
   }
 
+  public setMonitorTimeout(time: BigInt) {
+    this.monitorTimeOut = Number(time);
+  }
   //Send Method to cover both Idempotent and Non-Idempotent
   public sendRequest(
     payload: Buffer,
     requestType: number,
-    packetNo: number,
-    noOfPackets: number,
+    byteArrayBufferNo: number,
+    totalByteArrayBuffers: number,
     responseLost = false
   ) {
     if (this.requestId === "") this.requestId = createRequestId();
@@ -59,26 +62,28 @@ export class UDPClient {
     const header = constructHeaders(
       requestType,
       this.requestId,
-      packetNo,
-      noOfPackets
+      byteArrayBufferNo,
+      totalByteArrayBuffers
     );
 
     // Converts the message object into array
-    const packet = Buffer.concat([header, payload], 512);
+    const buffer = Buffer.concat([header, payload], 512);
+
+    // Send over to server
     this.client.send(
-      packet,
+      buffer,
       0,
-      packet.length,
+      buffer.length,
       this.sendPort,
       this.address,
-      (err: Error | null, bytes: number) => {
+      (err: Error | null) => {
         if (err) {
           console.log(`Error sending message: ${err}`);
         } else {
           logPacketInformation(
             this.requestId,
-            packetNo,
-            noOfPackets,
+            byteArrayBufferNo,
+            totalByteArrayBuffers,
             requestType,
             payload
           );
@@ -86,6 +91,8 @@ export class UDPClient {
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
             let callback;
+
+            // Simulate response Lost if true
             if (!responseLost) {
               clearTimeout(timeOutId);
 
@@ -103,15 +110,18 @@ export class UDPClient {
                 this.client.close();
               }, this.monitorTimeOut * 1000);
               this.monitorMode = true;
-            } else if (!this.monitorMode)
-              this.client.close(() => {
-                console.log(`Socket is closed after sending packet`);
-              });
+            } else if (!this.monitorMode) this.client.close();
           });
 
+          // Resend if not acknowledgement has been received for 5 secs
           const timeOutId = setTimeout(() => {
             this.client = dgram.createSocket("udp4");
-            this.sendRequest(payload, requestType, packetNo, noOfPackets);
+            this.sendRequest(
+              payload,
+              requestType,
+              byteArrayBufferNo,
+              totalByteArrayBuffers
+            );
           }, this.timeout);
         }
       }
