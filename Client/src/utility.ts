@@ -25,12 +25,15 @@ export function logPacketInformation(
   packetNo: number,
   noOfPackets: number,
   requestType: number,
-  payload: Buffer
+  payload: any
 ) {
-  console.log("--------------------------------------------------------------");
-  console.log(`The Packet Id is: ${packetId}.`);
-  console.log(`This is Packet ${packetNo} out of ${noOfPackets}...`);
+  console.log("--------------------Packet Information-----------------------");
+  console.log(`The Packet Id is: ${packetId}`);
+  console.log(`This is Packet ${packetNo} out of ${noOfPackets}`);
   console.log(`This is the Request Type ${requestType}`);
-  console.log(`This is the Payload Received/Sent: ${payload}`);
-  console.log("--------------------------------------------------------------");
+  if (requestType >= 2 && requestType <= 7)
+    console.log(`This is the Payload Sent: ${payload}`);
+  console.log(
+    "--------------------------------------------------------------\n"
+  );
 }
