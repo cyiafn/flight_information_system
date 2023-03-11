@@ -9,6 +9,8 @@ import {
   createFlightRequest,
   createFlightWithRequestLost,
   createFlightWithResponseLost,
+  updateFlightPriceRequestWithRequestLost,
+  updateFlightPriceRequestWithResponseLost,
 } from "./stubs";
 
 const rl = readline.createInterface({ input, output });
@@ -21,10 +23,16 @@ export async function userInterface() {
   console.log("2. Query Flight Information");
   console.log("3. Make a Flight Seat Reservation");
   console.log("4. Monitor Flight Seats Information");
-  console.log("5. Update The Flight Ticket Price");
-  console.log("6. Create a Flight Request");
-  console.log("7. Create a Flight Request with Request Lost");
-  console.log("8. Create a Flight Request with Response Lost");
+  console.log("5. Update the Flight Ticket Price");
+  console.log("6. Create a Flight");
+  console.log("7. Create a Flight with Request Lost (Non-idempotent)");
+  console.log("8. Create a Flight with Response Lost (Non-idempotent)");
+  console.log(
+    "9. Update the Flight Ticket Price with Request Lost (Idempotent)"
+  );
+  console.log(
+    "10. Update the Flight Ticket Price with Response Lost (Idempotent)"
+  );
   console.log("Type q to quit.");
   option = Number(await rl.question("What do you wish to do?\n"));
   while (option < 1 || option > 8) {
@@ -57,8 +65,14 @@ export async function userInterface() {
     case 8:
       inputs = await q8();
       break;
+    case 9:
+      inputs = await q9();
+      break;
+    case 10:
+      inputs = await q10();
+      break;
   }
-  console.log(option);
+
   return String(option);
 }
 
@@ -109,7 +123,7 @@ async function q4() {
   );
 }
 
-// Update flight price based on exisitng flight identifier
+// Update flight price based on existing flight identifier
 async function q5() {
   const flightIdentifier = Number(
     await rl.question("Input your Flight Identifier Number\n")
@@ -147,8 +161,7 @@ async function q6() {
   createFlightRequest(dto);
 }
 
-// Create a flight request based on the source location, destination location,
-// WITH REQUEST LOST
+// Create a flight request WITH REQUEST LOST
 async function q7() {
   const sourceLocation = await rl.question("Input your Source Location\n");
   const destinationLocation = await rl.question(
@@ -175,8 +188,7 @@ async function q7() {
   createFlightWithRequestLost(dto);
 }
 
-// Create a flight request based on the source location, destination location,
-// WITH RESPONSE LOST
+// Create a flight request WITH RESPONSE LOST
 async function q8() {
   const sourceLocation = await rl.question("Input your Source Location\n");
   const destinationLocation = await rl.question(
@@ -201,6 +213,25 @@ async function q8() {
   };
 
   createFlightWithResponseLost(dto);
+}
+// Update the flight price WITH REQUEST LOST
+async function q9() {
+  const flightIdentifier = Number(
+    await rl.question("Input your Flight Identifier Number\n")
+  );
+  const newPrice = Number(await rl.question("Input your new price\n"));
+
+  updateFlightPriceRequestWithRequestLost(flightIdentifier, newPrice);
+}
+
+//  Update the flight price WITH RESPONSE LOST
+async function q10() {
+  const flightIdentifier = Number(
+    await rl.question("Input your Flight Identifier Number\n")
+  );
+  const newPrice = Number(await rl.question("Input your new price\n"));
+
+  updateFlightPriceRequestWithResponseLost(flightIdentifier, newPrice);
 }
 
 async function main() {

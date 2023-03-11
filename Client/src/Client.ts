@@ -116,6 +116,7 @@ export class UDPClient {
           // Resend if not acknowledgement has been received for 5 secs
           const timeOutId = setTimeout(() => {
             this.client = dgram.createSocket("udp4");
+            console.log("No acknowledgement, sending packet again");
             this.sendRequest(
               payload,
               requestType,

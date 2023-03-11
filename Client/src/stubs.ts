@@ -92,9 +92,7 @@ export function createFlightWithRequestLost(dto: CreateFlightRequest) {
     ...dto,
   });
 
-  console.log(
-    "Sending a packet but obviously will fail, will resend in 5 sec..."
-  );
+  console.log("Sending a packet, will resend in 5 sec...");
   setTimeout(
     () =>
       client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1),
@@ -109,4 +107,46 @@ export function createFlightWithResponseLost(dto: CreateFlightRequest) {
   });
 
   client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1, true);
+}
+
+// Simulate update Flight Price with request lost
+export function updateFlightPriceRequestWithRequestLost(
+  flightIdentifier: number,
+  newPrice: number
+) {
+  const payload = marshal({
+    FlightIdentifier: flightIdentifier,
+    NewPrice: newPrice,
+  });
+
+  console.log("Sending a packet, will resend in 5 sec...");
+  setTimeout(
+    () =>
+      client.sendRequest(
+        payload,
+        RequestType.UpdateFlightPriceRequestType,
+        1,
+        1
+      ),
+    5000
+  );
+}
+
+// Simulate update Flight Price with response lost
+export function updateFlightPriceRequestWithResponseLost(
+  flightIdentifier: number,
+  newPrice: number
+) {
+  const payload = marshal({
+    FlightIdentifier: flightIdentifier,
+    NewPrice: newPrice,
+  });
+
+  client.sendRequest(
+    payload,
+    RequestType.UpdateFlightPriceRequestType,
+    1,
+    1,
+    true
+  );
 }
