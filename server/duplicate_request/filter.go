@@ -26,9 +26,10 @@ type Filter struct {
 // NewFilter instantiates a new filter object
 func NewFilter() *Filter {
 	filter := &Filter{
-		KnownRequests: make(map[string]time.Time),
-		cleanUpTicker: time.NewTicker(defaultRequestIDCleanup),
-		cleanupChan:   make(chan struct{}),
+		KnownRequests:       make(map[string]time.Time),
+		KnownRequestReplies: make(map[string][][]byte),
+		cleanUpTicker:       time.NewTicker(defaultRequestIDCleanup),
+		cleanupChan:         make(chan struct{}),
 	}
 
 	go filter.cleanUp()
