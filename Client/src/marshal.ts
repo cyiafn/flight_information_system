@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 
 function toByteArray<T>(data: T): Buffer {
-  console.log(typeof data);
+  // console.log(typeof data);
   if (Buffer.isBuffer(data)) return data;
   else if (typeof data === "string") {
     return Buffer.from(data + "\0");
@@ -38,6 +38,6 @@ function toByteArray<T>(data: T): Buffer {
 
 export function marshal(data: any): any {
   let requestBuffer = toByteArray(data);
-  console.log(requestBuffer);
+  // console.log(requestBuffer);
   return requestBuffer;
 }

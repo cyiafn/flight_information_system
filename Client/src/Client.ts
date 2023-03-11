@@ -33,16 +33,6 @@ export class UDPClient {
     this.timeout = 5000; //Time out when no reply in 0.5 seconds
     this.monitorTimeOut = 0;
     this.monitorMode = false;
-
-    // this.client.bind(this.receivePort, this.address);
-
-    // this.client.on('listening', () => {
-    //     console.log(`Test Client listening on ${this.address}:${this.receivePort}`);
-    // });
-
-    // this.client.on('message', () => {
-    //     console.log(`Test Client received message from ${this.address}:${this.receivePort}`);
-    // });
   }
 
   //UDPClient get Methods
