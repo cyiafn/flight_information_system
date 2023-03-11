@@ -9,7 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Marshal marshals any structure to the type of byte array structure in our report.
+// Note, nested arrays are not implemented, maps are not implemented, some primitives unused are not implemented as well
+// This uses a lot of runtime evaluation with some meta programming, it is not as performant as the standard marshalling library.
 func Marshal(v any) ([]byte, error) {
+	// if it is a nil pointer, we just return
 	if v == nil {
 		return nil, nil
 	}
@@ -17,29 +21,35 @@ func Marshal(v any) ([]byte, error) {
 
 	reflectValue := reflect.ValueOf(v)
 	reflectElem := reflectValue.Elem()
-
+	// we only allow marshalling of structures
 	if reflectElem.Kind() != reflect.Struct {
 		logs.Error("value passed in is not of structure type")
 		return nil, custom_errors.NewMarshallerError(errors.Errorf("value passed in is not of structure type"))
 	}
 
+	// iterate through all fields of the structure
 	for i := 0; i < reflectElem.NumField(); i++ {
 		field := reflectElem.FieldByName(reflectElem.Type().Field(i).Name)
+		//f checks if we can manipulate the field
 		if field.IsValid() {
+			// determine the type of field
 			fieldKind := reflectElem.Type().Field(i).Type.Kind()
+			// if it is an interface, we need to evaluate if is nil or not, in which we will skip that field, else, we will
+			// evaluate the actual type of that interface. All interfaces in golang are pointers.
 			if fieldKind == reflect.Interface {
 				if field.IsNil() {
 					continue
 				}
 				fieldKind = reflect.TypeOf(field.Interface()).Elem().Kind()
 			}
+			// based on the type of field, we recursively (except for primitives) call the functions to marshal deeply nested objects
 			switch fieldKind {
 			case reflect.Int, reflect.Int64, reflect.Int32, reflect.Uint8, reflect.Float64, reflect.String:
 				err := marshalPrimitive(&response, fieldKind, field)
 				if err != nil {
 					return nil, err
 				}
-			case reflect.Slice:
+			case reflect.Slice: // slice is like a list/vector
 				err := marshalArray(&response, field, reflectElem.Type().Field(i).Type.Elem().Kind())
 				if err != nil {
 					return nil, err
@@ -58,6 +68,7 @@ func Marshal(v any) ([]byte, error) {
 	return response, nil
 }
 
+// marshalPrimitive converts the primitives to bytes and appends it at the end of the payload
 func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field reflect.Value) error {
 	switch fieldKind {
 	case reflect.Int64:
@@ -72,7 +83,7 @@ func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field reflect.Va
 		*response = append(*response, bytes.Float64ToBytes(field.Interface().(float64))...)
 	case reflect.String:
 		*response = append(*response, []byte(field.Interface().(string))...)
-		*response = append(*response, stringTerminator)
+		*response = append(*response, stringTerminator) // all strings will end with stringTerminators (\0) so that we know its the end of the string
 	default:
 		logs.Error("unimplemented type: %v", fieldKind)
 		return custom_errors.NewMarshallerError(errors.Errorf("unimplemented type"))
@@ -80,10 +91,13 @@ func marshalPrimitive(response *[]byte, fieldKind reflect.Kind, field reflect.Va
 	return nil
 }
 
+// marshalArray marshals an slice*
 func marshalArray(response *[]byte, field reflect.Value, elementType reflect.Kind) error {
+	// determine the length of the array
 	sizeOfSlice := field.Len()
 	*response = append(*response, bytes.Int64ToBytes(int64(sizeOfSlice))...)
 
+	// if elementType of the slice is of the following, we cast it to that type and convert it to bytes
 	switch elementType {
 	case reflect.Int:
 		slice := field.Interface().([]int)
@@ -132,11 +146,14 @@ func marshalArray(response *[]byte, field reflect.Value, elementType reflect.Kin
 	return nil
 }
 
+// marshalStruct is mostly similar to the marshal function.
 func marshalStruct(response *[]byte, reflectValue reflect.Value) error {
+	// if it is a pointer, get it's true type so we can iterate through the fields
 	if reflectValue.Elem().Kind() == reflect.Ptr {
 		reflectValue = reflectValue.Elem().Elem()
 	}
 	for i := 0; i < reflectValue.NumField(); i++ {
+		// for each valid field, type
 		field := reflectValue.FieldByName(reflectValue.Type().Field(i).Name)
 		if field.IsValid() {
 			fieldKind := reflectValue.Type().Field(i).Type.Kind()

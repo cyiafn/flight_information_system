@@ -1,5 +1,12 @@
 package custom_errors
 
+/**
+Everything here are custom error objects we use to dynamically parse and generate what statusCode to return to
+front-end.
+
+Most errors here are self-explanatory.
+*/
+
 import "fmt"
 
 type NoMatchForSourceAndDestinationError struct {

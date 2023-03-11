@@ -7,6 +7,7 @@ import (
 	"github.com/cyiafn/flight_information_system/server/dto"
 )
 
+// GetFlightInformation gets Airfare, DepartureTime and TotalAvailableSeats of a flight based on flightIDs
 func GetFlightInformation(_ context.Context, request any) (any, error) {
 	req := request.(*dto.GetFlightInformationRequest)
 	res := &dto.GetFlightInformationResponse{}

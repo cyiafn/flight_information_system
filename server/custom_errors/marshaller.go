@@ -2,6 +2,13 @@ package custom_errors
 
 import "fmt"
 
+/**
+Everything here are custom error objects we use to dynamically parse and generate what statusCode to return to
+front-end.
+
+Most errors here are self-explanatory.
+*/
+
 type MarshallerError struct {
 	err error
 }

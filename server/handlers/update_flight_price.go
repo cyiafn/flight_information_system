@@ -8,6 +8,7 @@ import (
 	"github.com/cyiafn/flight_information_system/server/dto"
 )
 
+// UpdateFlightPrice updates the flight prices for a particular flight
 func UpdateFlightPrice(_ context.Context, request any) (any, error) {
 	req := request.(*dto.UpdateFlightPriceRequest)
 	res := &dto.UpdateFlightPriceResponse{}

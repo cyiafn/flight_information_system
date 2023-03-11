@@ -8,6 +8,7 @@ import (
 	"github.com/cyiafn/flight_information_system/server/dto"
 )
 
+// MakeSeatReservation makes a reservation for a flight identifier.
 func MakeSeatReservation(_ context.Context, request any) (any, error) {
 	req := request.(*dto.MakeSeatReservationRequest)
 
@@ -24,6 +25,7 @@ func MakeSeatReservation(_ context.Context, request any) (any, error) {
 		}
 		flight.TotalAvailableSeats -= req.SeatsToReserve
 
+		// handle the callback in the rpc handler in charge of callback
 		handleMonitorSeatUpdatesCallback(flight)
 	}
 

@@ -4,6 +4,10 @@ import (
 	"go.uber.org/zap"
 )
 
+/**
+This is the logger client that we are working with, initialises the logger with custom configurations so that we can add middlewares if we need into the logger.
+*/
+
 var logger *zap.SugaredLogger
 
 func init() {

@@ -13,6 +13,7 @@ import (
 Note: no map support, no nested array support
 */
 
+// constants for primitives
 const (
 	intSize     = 8
 	int64Size   = 8
@@ -22,32 +23,43 @@ const (
 )
 
 var (
+	// stringTerminator (\0)
 	stringTerminator = []byte("\000")[0]
 )
 
+// Unmarshal a byte array to a structure based on the structure outlined in the report.
+// Note, nested arrays are not implemented, maps are not implemented, some primitives unused are not implemented as well
+// This uses a lot of runtime evaluation with some meta programming, it is not as performant as the standard marshalling library.
+// we keep a ptr while unmarshalling to indicate the index of the byte we are on
 func Unmarshal(request []byte, v any) error {
 	var err error
 
+	// gets the actual type of the structure
 	reflectValue := reflect.ValueOf(v)
 	reflectElem := reflectValue.Elem()
 
 	ptr := 0
 
+	// if v != structure, its an error
 	if reflectElem.Kind() != reflect.Struct {
 		logs.Error("value passed in is not of structure type")
 		return custom_errors.NewMarshallerError(errors.Errorf("value passed in is not of structure type"))
 	}
 
+	// for each field, we populate the data in sequence.
 	for i := 0; i < reflectElem.NumField(); i++ {
 		field := reflectElem.FieldByName(reflectElem.Type().Field(i).Name)
+		// if we are able to manipulate the field
 		if field.IsValid() && field.CanSet() {
 			fieldKind := reflectElem.Type().Field(i).Type.Kind()
+			// if it is an interface, we need to evaluate further whats the actual type
 			if fieldKind == reflect.Interface {
 				if field.IsNil() {
 					continue
 				}
 				fieldKind = reflect.TypeOf(field.Interface()).Elem().Kind()
 			}
+			// for each type we unmarshal
 			switch fieldKind {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Float64, reflect.String:
 				ptr, err = unmarshalPrimitive(request, fieldKind, field, ptr)
@@ -64,10 +76,14 @@ func Unmarshal(request []byte, v any) error {
 	return err
 }
 
+// unmarshalArray unmarshals part of the byte array to an array
 func unmarshalArray(request []byte, field reflect.Value, elementType reflect.Kind, ptr int) (int, error) {
+	// gets the length of the array
 	sizeOfSlice := int(bytes.ToInt64(request[ptr : ptr+int64Size]))
 	ptr += int64Size
 
+	// for each different element type, we convert the value from []byte to the actual data type
+	// recursively unmarshals for structure type
 	switch elementType {
 	case reflect.Int:
 		slice := reflect.MakeSlice(reflect.TypeOf([]int{}), sizeOfSlice, sizeOfSlice)
@@ -110,7 +126,7 @@ func unmarshalArray(request []byte, field reflect.Value, elementType reflect.Kin
 		for i := 0; i < sizeOfSlice; i++ {
 			start := ptr
 			for ; start < len(request); start++ {
-				if request[start] == stringTerminator {
+				if request[start] == stringTerminator { // we get all bytes until the string terminator \0
 					break
 				}
 			}
@@ -128,7 +144,7 @@ func unmarshalArray(request []byte, field reflect.Value, elementType reflect.Kin
 		for i := 0; i < sizeOfSlice; i++ {
 			ind := slice.Index(i)
 			var err error
-			ptr, err = unmarshalStruct(request, ind, ptr)
+			ptr, err = unmarshalStruct(request, ind, ptr) // recursively unmarshals the structure for each index
 			if err != nil {
 				return 0, err
 			}
@@ -141,9 +157,11 @@ func unmarshalArray(request []byte, field reflect.Value, elementType reflect.Kin
 	return ptr, nil
 }
 
+// unmarshalStruct is mostly similar to unmarshal
 func unmarshalStruct(request []byte, reflectValue reflect.Value, ptr int) (int, error) {
 	var err error
 
+	// for each field we unmarshal based on the type
 	for i := 0; i < reflectValue.NumField(); i++ {
 		field := reflectValue.FieldByName(reflectValue.Type().Field(i).Name)
 		if field.IsValid() && field.CanSet() {
@@ -173,6 +191,7 @@ func unmarshalStruct(request []byte, reflectValue reflect.Value, ptr int) (int, 
 	return ptr, nil
 }
 
+// unmarshalPrimitive unmarshals  each primitive into v
 func unmarshalPrimitive(request []byte, fieldKind reflect.Kind, field reflect.Value, ptr int) (int, error) {
 	switch fieldKind {
 	case reflect.Int, reflect.Int64:

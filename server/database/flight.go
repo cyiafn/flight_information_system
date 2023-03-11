@@ -3,26 +3,32 @@ package database
 import "github.com/cyiafn/flight_information_system/server/dao"
 
 /*
-Note: query is a linear scan, it is not efficient, but this is not the focus of this project
+Note: Query is a linear scan, it is not efficient, but this is not the focus of this project
 */
 
+// flights is our in-memory "db" to store flights
 var flights []*dao.Flight
 
+// this emulates the auto-incrementing PK function of some databases
 var largestFlightID int32
 
+// GetAllFlights Getter function to return all flights
 func GetAllFlights() []*dao.Flight {
 	return flights
 }
 
+// GetLargestFlightID gets the largest flight, as there is no flight delete functionality, the following is sufficient
 func GetLargestFlightID() int32 {
 	return largestFlightID
 }
 
+// NewFlight emulates an insert with an auto-incrementing PK.
 func NewFlight(flight *dao.Flight) {
 	flights = append(flights, flight)
 	largestFlightID += 1
 }
 
+// PopulateFlights simply populates hardcoded data for flights.
 func PopulateFlights() {
 	flights = append(flights, &dao.Flight{
 		FlightIdentifier:    1,

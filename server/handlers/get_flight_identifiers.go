@@ -8,6 +8,7 @@ import (
 	"github.com/cyiafn/flight_information_system/server/dto"
 )
 
+// GetFlightIdentifiers simply gets all flight identifiers for a source and destination location
 func GetFlightIdentifiers(_ context.Context, request any) (any, error) {
 	req := request.(*dto.GetFlightIdentifiersRequest)
 	res := &dto.GetFlightIdentifiersResponse{

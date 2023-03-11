@@ -8,7 +8,13 @@ import (
 	"github.com/cyiafn/flight_information_system/server/dto"
 )
 
+/**
+Handlers contains all biz logic of each of the RPC code.
+*/
+
+// CreateFlight simply creates a flight and returns to the user the flightIdentifier for the new flight
 func CreateFlight(_ context.Context, request any) (any, error) {
+	// we cast the request object to the actual object.
 	req := request.(*dto.CreateFlightRequest)
 	res := &dto.CreateFlightResponse{}
 

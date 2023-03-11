@@ -1,11 +1,9 @@
 package utils
 
 import (
+	"github.com/cyiafn/flight_information_system/server/logs"
 	"os"
 	"strconv"
-	"strings"
-
-	"github.com/cyiafn/flight_information_system/server/logs"
 )
 
 func GetEnvStr(key string) (string, bool) {
@@ -27,16 +25,4 @@ func GetEnvInt(key string) (int, bool) {
 		return 0, false
 	}
 	return intEnvVar, false
-}
-
-func GetEnvBool(key string) (bool, bool) {
-	envVar := os.Getenv(key)
-	if envVar == "" {
-		return false, false
-	}
-	envVar = strings.ToLower(envVar)
-	if envVar == "true" {
-		return true, true
-	}
-	return false, true
 }
