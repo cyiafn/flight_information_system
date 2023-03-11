@@ -14,13 +14,16 @@ export async function getFlightIdentifier(
     DestinationLocation: destinationLocation,
   });
 
-  await client.sendRequest(
-    payload,
-    RequestType.GetFlightIdentifiersRequestType,
-    1,
-    1
-  );
-  console.log("HELLO");
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(
+      payload,
+      RequestType.GetFlightIdentifiersRequestType,
+      1,
+      1
+    );
+    resolve(client.promise);
+  });
 }
 
 // Get flight information
@@ -29,12 +32,16 @@ export function getFlightInformation(flightIdentifier: number) {
     FlightIdentifier: flightIdentifier,
   });
 
-  client.sendRequest(
-    payload,
-    RequestType.GetFlightInformationRequestType,
-    1,
-    1
-  );
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(
+      payload,
+      RequestType.GetFlightInformationRequestType,
+      1,
+      1
+    );
+    resolve(client.promise);
+  });
 }
 
 // Crate seat reservation
@@ -47,7 +54,16 @@ export function createSeatReservationRequest(
     SeatsToReserve: seatsToReserve,
   });
 
-  client.sendRequest(payload, RequestType.MakeSeatReservationRequestType, 1, 1);
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(
+      payload,
+      RequestType.MakeSeatReservationRequestType,
+      1,
+      1
+    );
+    resolve(client.promise);
+  });
 }
 
 // Listen for seat updates
@@ -60,8 +76,17 @@ export function monitorSeatUpdatesCallbackRequest(
     LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds,
   });
 
-  client.sendRequest(payload, RequestType.MonitorSeatUpdatesRequestType, 1, 1);
-  client.setMonitorTimeout(lengthOfMonitorIntervalInSeconds);
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(
+      payload,
+      RequestType.MonitorSeatUpdatesRequestType,
+      1,
+      1
+    );
+    client.setMonitorTimeout(lengthOfMonitorIntervalInSeconds);
+    resolve(client.promise);
+  });
 }
 
 // Update Flight Price Request
@@ -74,7 +99,11 @@ export function updateFlightPriceRequest(
     NewPrice: newPrice,
   });
 
-  client.sendRequest(payload, RequestType.UpdateFlightPriceRequestType, 1, 1);
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(payload, RequestType.UpdateFlightPriceRequestType, 1, 1);
+    resolve(client.promise);
+  });
 }
 
 // Create Flight Request
@@ -83,7 +112,11 @@ export function createFlightRequest(dto: CreateFlightRequest) {
     ...dto,
   });
 
-  client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
+    resolve(client.promise);
+  });
 }
 
 // Simulate Get Flight Information with request lost from server
@@ -92,12 +125,14 @@ export function createFlightWithRequestLost(dto: CreateFlightRequest) {
     ...dto,
   });
 
-  console.log("Sending a packet, will resend in 5 sec...");
-  setTimeout(
-    () =>
-      client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1),
-    5000
-  );
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    console.log("Sending a packet, will resend in 5 sec...");
+    setTimeout(() => {
+      client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
+      resolve(client.promise);
+    }, 5000);
+  });
 }
 
 // Simulate Get Flight Information with response lost in client
@@ -106,7 +141,17 @@ export function createFlightWithResponseLost(dto: CreateFlightRequest) {
     ...dto,
   });
 
-  client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1, true);
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    client.sendRequest(
+      payload,
+      RequestType.CreateFlightRequestType,
+      1,
+      1,
+      true
+    );
+    resolve(client.promise);
+  });
 }
 
 // Simulate update Flight Price with request lost
@@ -119,17 +164,19 @@ export function updateFlightPriceRequestWithRequestLost(
     NewPrice: newPrice,
   });
 
-  console.log("Sending a packet, will resend in 5 sec...");
-  setTimeout(
-    () =>
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    console.log("Sending a packet, will resend in 5 sec...");
+    setTimeout(() => {
       client.sendRequest(
         payload,
         RequestType.UpdateFlightPriceRequestType,
         1,
         1
-      ),
-    5000
-  );
+      );
+      resolve(client.promise);
+    }, 5000);
+  });
 }
 
 // Simulate update Flight Price with response lost
@@ -142,11 +189,16 @@ export function updateFlightPriceRequestWithResponseLost(
     NewPrice: newPrice,
   });
 
-  client.sendRequest(
-    payload,
-    RequestType.UpdateFlightPriceRequestType,
-    1,
-    1,
-    true
-  );
+  return new Promise((resolve, reject) => {
+    const client = new UDPClient("127.0.0.1", 8080);
+    setTimeout(() => {
+      client.sendRequest(
+        payload,
+        RequestType.UpdateFlightPriceRequestType,
+        1,
+        1
+      );
+      resolve(client.promise);
+    }, 5000);
+  });
 }

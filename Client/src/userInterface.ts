@@ -92,7 +92,7 @@ async function q2() {
     await rl.question("Input your Flight Identifier Number\n")
   );
 
-  getFlightInformation(flightIdentifier);
+  await getFlightInformation(flightIdentifier);
 }
 
 // Create seat reservation(s) based on flight identifier number and
@@ -105,7 +105,7 @@ async function q3() {
     await rl.question("Input your Seats to Reserve\n")
   );
 
-  createSeatReservationRequest(flightIdentifier, seatsToReserve);
+  await createSeatReservationRequest(flightIdentifier, seatsToReserve);
 }
 
 // Listen for seat number changes
@@ -117,7 +117,7 @@ async function q4() {
     await rl.question("Input your monitor interval in seconds\n")
   );
 
-  monitorSeatUpdatesCallbackRequest(
+  await monitorSeatUpdatesCallbackRequest(
     flightIdentifier,
     BigInt(lengthOfMonitorIntervalInSeconds)
   );
@@ -132,7 +132,7 @@ async function q5() {
     2
   );
 
-  updateFlightPriceRequest(flightIdentifier, newPrice);
+  await updateFlightPriceRequest(flightIdentifier, newPrice);
 }
 
 // Create a flight request based on the source location, destination location,
@@ -160,7 +160,7 @@ async function q6() {
     TotalAvailableSeats: totalAvailableSeats,
   };
 
-  createFlightRequest(dto);
+  await createFlightRequest(dto);
 }
 
 // Create a flight request WITH REQUEST LOST
@@ -187,7 +187,7 @@ async function q7() {
     TotalAvailableSeats: totalAvailableSeats,
   };
 
-  createFlightWithRequestLost(dto);
+  await createFlightWithRequestLost(dto);
 }
 
 // Create a flight request WITH RESPONSE LOST
@@ -214,7 +214,7 @@ async function q8() {
     TotalAvailableSeats: totalAvailableSeats,
   };
 
-  createFlightWithResponseLost(dto);
+  await createFlightWithResponseLost(dto);
 }
 // Update the flight price WITH REQUEST LOST
 async function q9() {
@@ -225,7 +225,7 @@ async function q9() {
     2
   );
 
-  updateFlightPriceRequestWithRequestLost(flightIdentifier, newPrice);
+  await updateFlightPriceRequestWithRequestLost(flightIdentifier, newPrice);
 }
 
 //  Update the flight price WITH RESPONSE LOST
@@ -237,15 +237,15 @@ async function q10() {
     2
   );
 
-  updateFlightPriceRequestWithResponseLost(flightIdentifier, newPrice);
+  await updateFlightPriceRequestWithResponseLost(flightIdentifier, newPrice);
 }
 
 async function main() {
   let input = "";
-  // while (input !== "q") {
-  //   input = await userInterface();
-  // }
-  await userInterface();
+  while (input !== "q") {
+    input = await userInterface();
+  }
+  //await userInterface();
 }
 
 // Start of the program

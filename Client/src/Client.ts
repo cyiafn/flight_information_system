@@ -18,6 +18,7 @@ export class UDPClient {
   timeout: number;
   monitorTimeOut: number;
   monitorMode: boolean;
+  promise: any;
 
   constructor(address: string, sendPort: number) {
     this.address = address; // IP Address of Server
@@ -28,6 +29,7 @@ export class UDPClient {
     this.timeout = 5000; // Time out when no reply in 0.5 seconds
     this.monitorTimeOut = 0; // Time to set when to stop monitoring
     this.monitorMode = false; // Whether callback is enable
+    this.promise = null;
   }
 
   private receiveResponse(buffer: Buffer) {
@@ -50,7 +52,7 @@ export class UDPClient {
     this.monitorTimeOut = Number(time);
   }
   //Send Method to cover both Idempotent and Non-Idempotent
-  public sendRequest(
+  public async sendRequest(
     payload: Buffer,
     requestType: number,
     byteArrayBufferNo: number,
@@ -69,63 +71,69 @@ export class UDPClient {
     // Converts the message object into array
     const buffer = Buffer.concat([header, payload], 512);
 
-    // Send over to server
-    this.client.send(
-      buffer,
-      0,
-      buffer.length,
-      this.sendPort,
-      this.address,
-      (err: Error | null) => {
-        if (err) {
-          console.log(`Error sending message: ${err}`);
-        } else {
-          logPacketInformation(
-            this.requestId,
-            byteArrayBufferNo,
-            totalByteArrayBuffers,
-            requestType,
-            payload
-          );
-
-          this.receivePort = this.client.address().port;
-          this.client.on("message", (msg) => {
-            let callback;
-
-            // Simulate response Lost if true
-            if (!responseLost) {
-              clearTimeout(timeOutId);
-
-              callback = this.receiveResponse(
-                msg
-              ) as ResponseType.MonitorSeatUpdatesResponseType;
-              responseLost = false;
-            }
-
-            // Dealing with callback
-            if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
-              setTimeout(() => {
-                console.log("No more monitoring");
-                this.monitorMode = false;
-                this.client.close();
-              }, this.monitorTimeOut * 1000);
-              this.monitorMode = true;
-            } else if (!this.monitorMode) this.client.close();
-          });
-
-          // Resend if not acknowledgement has been received for 5 secs
-          const timeOutId = setTimeout(() => {
-            this.client = dgram.createSocket("udp4");
-            console.log("No acknowledgement, sending packet again");
-            this.sendRequest(
-              payload,
-              requestType,
+    this.promise = new Promise((resolve, reject) => {
+      // Send over to server
+      this.client.send(
+        buffer,
+        0,
+        buffer.length,
+        this.sendPort,
+        this.address,
+        (err: Error | null) => {
+          if (err) {
+            console.log(`Error sending message: ${err}`);
+          } else {
+            logPacketInformation(
+              this.requestId,
               byteArrayBufferNo,
-              totalByteArrayBuffers
+              totalByteArrayBuffers,
+              requestType,
+              payload
             );
-          }, this.timeout);
+
+            this.receivePort = this.client.address().port;
+            this.client.on("message", (msg) => {
+              let callback;
+
+              // Simulate response Lost if true
+              if (!responseLost) {
+                clearTimeout(timeOutId);
+
+                callback = this.receiveResponse(
+                  msg
+                ) as ResponseType.MonitorSeatUpdatesResponseType;
+                responseLost = false;
+              }
+
+              // Dealing with callback
+              if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
+                setTimeout(() => {
+                  console.log("No more monitoring");
+                  this.monitorMode = false;
+                  this.client.close();
+                  resolve(1);
+                }, this.monitorTimeOut * 1000);
+                this.monitorMode = true;
+              } else if (!this.monitorMode) {
+                this.client.close();
+                resolve(1);
+              }
+            });
+
+            // Resend if not acknowledgement has been received for 5 secs
+            const timeOutId = setTimeout(() => {
+              this.client = dgram.createSocket("udp4");
+              console.log("No acknowledgement, sending packet again");
+              this.sendRequest(
+                payload,
+                requestType,
+                byteArrayBufferNo,
+                totalByteArrayBuffers
+              );
+            }, this.timeout);
+          }
         }
-      }
-    );
+      );
+    });
   }
 }
