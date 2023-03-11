@@ -1,12 +1,12 @@
 import { Buffer } from "buffer";
 
 function toByteArray<T>(data: T): Buffer {
-  // console.log(typeof data);
+  let buffer;
+
   if (Buffer.isBuffer(data)) return data;
   else if (typeof data === "string") {
     return Buffer.from(data + "\0");
   } else if (typeof data === "number") {
-    var buffer;
     if (!Number.isInteger(data)) {
       buffer = Buffer.alloc(8);
       buffer.writeDoubleLE(data);
@@ -38,6 +38,6 @@ function toByteArray<T>(data: T): Buffer {
 
 export function marshal(data: any): any {
   let requestBuffer = toByteArray(data);
-  // console.log(requestBuffer);
+  
   return requestBuffer;
 }

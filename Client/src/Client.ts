@@ -1,13 +1,12 @@
-import dgram, { RemoteInfo } from "dgram";
+import dgram from "dgram";
 import { Buffer } from "buffer";
-import { marshal } from "./marshal";
 import {
   constructHeaders,
-  createRequestId,
   deconstructHeaders,
 } from "./headers";
 import { PendingRequest, ResponseType } from "./interfaces";
 import { unmarshal } from "./unmarshal";
+import { getPacketInformation } from "./utility";
 
 // Connect to Server Via UDP Connection
 // port = 8080
@@ -54,8 +53,10 @@ export class UDPClient {
 
   private receiveResponse(buffer: Buffer) {
     const header = deconstructHeaders(buffer);
-
     const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
+
+    getPacketInformation(header.requestId, Number(header.packetNo), Number(header.noOfPackets), header.requestType, buffer.subarray(25, 512));
+
     if (typeof payload === "string") console.log(payload);
     else return payload;
   }
@@ -85,8 +86,9 @@ export class UDPClient {
         if (err) {
           console.log(`Error sending message: ${err}`);
         } else {
-          console.log(`Sent ${bytes} bytes to server`);
 
+          getPacketInformation(this.requestId, packetNo, noOfPackets, requestType, payload);
+          
           this.receivePort = this.client.address().port;
           this.client.on("message", (msg) => {
             clearTimeout(closeSocketTimeout);
@@ -97,7 +99,7 @@ export class UDPClient {
             ) as ResponseType.MonitorSeatUpdatesResponseType;
 
             // Dealing with callback
-            if (callback === 105) {
+            if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
               setTimeout(() => {
                 console.log("No more monitoring");
                 this.monitorMode = false;
@@ -106,7 +108,7 @@ export class UDPClient {
               this.monitorMode = true;
             } else if (!this.monitorMode)
               this.client.close(() => {
-                console.log(`CLOSED SOCKET`);
+                console.log(`Socket is closed after receiving acknowledgement`);
               });
           });
 
@@ -124,4 +126,5 @@ export class UDPClient {
       }
     );
   }
+
 }

@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { ResponseType, StatusCode } from "./interfaces";
 import { convertToDateTime, findStrFromBuffer } from "./utility";
 
-export function unmarshal(buffer: Buffer, requestType: Number) {
+export function unmarshal(buffer: Buffer, requestType: number) {
   const statusCode = buffer[0];
   const data = buffer.subarray(1, buffer.length);
 
@@ -22,7 +22,7 @@ export function unmarshal(buffer: Buffer, requestType: Number) {
   }
 }
 
-function determineResponseType(buffer: Buffer, responseType: Number) {
+function determineResponseType(buffer: Buffer, responseType: number) {
   let result;
   let totalAvailableSeats: number, airfare: string, flightIdentifier: number;
   let departureTime: string;
@@ -76,9 +76,9 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
 
     case ResponseType.MonitorSeatUpdatesCallbackType:
       totalAvailableSeats = buffer.readInt32LE();
-      result = {
-        TotalAvailableSeats: totalAvailableSeats,
-      };
+      console.log(
+        `The total available seats for this flight is ${totalAvailableSeats}`
+      );
       break;
 
     case ResponseType.UpdateFlightPriceResponseType:
@@ -98,15 +98,6 @@ function determineResponseType(buffer: Buffer, responseType: Number) {
 
       airfare = buffer.readDoubleLE((curLen += 8)).toFixed(2);
       totalAvailableSeats = buffer.readInt32LE((curLen += 8));
-
-      result = {
-        FlightIdentifier: flightIdentifier,
-        SourceLocation: sourceLocation,
-        DestinationLocation: destinationLocation,
-        DepartureTime: departureTime,
-        Airfare: airfare,
-        TotalAvailableSeats: totalAvailableSeats,
-      };
 
       console.log(
         `The flight price for Flight Identifier ${flightIdentifier} flying from ${sourceLocation} to ${destinationLocation} at ${departureTime} have been updated.`

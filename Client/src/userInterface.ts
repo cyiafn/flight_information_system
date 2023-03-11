@@ -1,6 +1,5 @@
 import * as readline from "readline/promises";
 import { stdin as input, stdout as output } from "process";
-import { UDPClient } from "./Client";
 import {
   createSeatReservationRequest,
   getFlightIdentifier,
@@ -26,7 +25,6 @@ export async function userInterface() {
     option = Number(await rl.question("Wrong Input\n"));
   }
 
-  const client = new UDPClient("127.0.0.1", 8080);
   let inputs;
   switch (option) {
     case 1:

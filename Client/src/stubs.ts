@@ -77,3 +77,4 @@ export function createFlightRequest(dto: CreateFlightRequest) {
 
   client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
 }
+
