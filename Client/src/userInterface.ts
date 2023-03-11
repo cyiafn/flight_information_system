@@ -236,9 +236,10 @@ async function q10() {
 
 async function main() {
   let input = "";
-  while (input !== "q") {
-    input = await userInterface();
-  }
+  // while (input !== "q") {
+  //   input = await userInterface();
+  // }
+  await userInterface();
 }
 
 // Start of the program
