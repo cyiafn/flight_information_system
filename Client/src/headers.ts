@@ -16,10 +16,10 @@ export function constructHeaders(
 ) {
   const header = Buffer.allocUnsafe(26);
 
-  header.writeUInt8(requestType, 0);
+  header.writeInt8(requestType, 0);
   header.write(requestIdStr, 1);
-  header.writeBigUint64LE(BigInt(packetNo), 10);
-  header.writeBigUint64LE(BigInt(noOfPackets), 18);
+  header.writeBigInt64LE(BigInt(packetNo), 10);
+  header.writeBigInt64LE(BigInt(noOfPackets), 18);
 
   return header;
 }
@@ -27,10 +27,10 @@ export function constructHeaders(
 // Destructure header to interpret
 export function deconstructHeaders(packet: Buffer) {
   const packetSliced = packet.subarray(0, 26);
-  const requestType = packetSliced.readUint8(0);
+  const requestType = packetSliced.readInt8(0);
   const requestIdStr = packetSliced.toString("utf-8", 1, 10);
-  const packetNo = packetSliced.readBigUint64LE(10);
-  const noOfPackets = packetSliced.readBigUint64LE(18);
+  const packetNo = packetSliced.readBigInt64LE(10);
+  const noOfPackets = packetSliced.readBigInt64LE(18);
 
   return {
     requestType: requestType,

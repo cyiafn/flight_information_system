@@ -84,6 +84,7 @@ export function createFlightRequest(dto: CreateFlightRequest) {
   client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
 }
 
+// Simulate Get Flight Information with request lost from server
 export function getFlightInformationWithRequestLost(flightIdentifier: number) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
@@ -103,6 +104,8 @@ export function getFlightInformationWithRequestLost(flightIdentifier: number) {
     5000
   );
 }
+
+// Simulate Get Flight Information with response lost in client
 export function getFlightInformationWithResponseLost(flightIdentifier: number) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
