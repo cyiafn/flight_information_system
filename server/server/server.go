@@ -84,8 +84,11 @@ func Boot(routes map[dto.RequestType]func(ctx context.Context, request any) (any
 
 // SpinDown kills the instance and closes their deps.
 func SpinDown() {
-	logs.Info("disabling duplicate request filter.")
-	instance.DuplicateRequestFilter.Close()
+	if instance.Mode == atMostOnceServerMode {
+		logs.Info("disabling duplicate request filter.")
+		instance.DuplicateRequestFilter.Close()
+	}
+
 	logs.Info("Disabling UDP listener.")
 	instance.UDPListener.StopListening()
 	logs.Info("Goodbye!")
