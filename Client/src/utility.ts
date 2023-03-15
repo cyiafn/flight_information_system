@@ -16,7 +16,7 @@ export function findStrFromBuffer(buffer: Buffer) {
     if (byte == 0x00) break;
     idx++;
   }
-  return { totalLen: idx + 1, str: buffer.toString("utf-8", 0, idx) };
+  return { totalLen: idx + 1, str: buffer.toString('utf-8', 0, idx) };
 }
 
 // Print out packet information
@@ -27,14 +27,25 @@ export function logPacketInformation(
   requestType: number,
   payload: Buffer | undefined
 ) {
-  console.log("--------------------Packet Information-----------------------");
+  console.log('--------------------Packet Information-----------------------');
   console.log(`The Packet Id is: ${packetId}`);
   console.log(`This is Packet ${packetNo} out of ${noOfPackets}`);
-  console.log(`This is the Request Type ${requestType}`);
+
   if (requestType >= 2 && requestType <= 7) {
-    console.log(`This is the Payload Sent: ${payload?.toString("hex")}`);
-  }
+    console.log(`This is the Request Type ${requestType}`);
+    console.log(`This is the Payload Sent: ${payload?.toString('hex')}`);
+  } else console.log(`This is the Response Type ${requestType}`);
   console.log(
-    "--------------------------------------------------------------\n"
+    '--------------------------------------------------------------\n'
   );
+}
+
+export function clearTimeouts(timeoutArr: any) {
+  for (var i = 0; i < timeoutArr.length; i++) {
+    clearTimeout(timeoutArr[i]);
+  }
+}
+
+export function isTimeout(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
 }

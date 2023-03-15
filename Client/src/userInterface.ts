@@ -84,7 +84,6 @@ async function q1() {
   const destinationLocation = await rl.question(
     "Input your destination location\n"
   );
-
   await getFlightIdentifier(sourceLocation, destinationLocation);
 }
 

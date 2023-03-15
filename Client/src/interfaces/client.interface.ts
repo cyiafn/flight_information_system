@@ -3,13 +3,21 @@ export type PendingRequest = {
   attempts: number;
 };
 
+export type RequestObj = {
+  payload: Buffer;
+  requestType: number;
+  byteArrayBufferNo: number;
+  totalByteArrayBuffers: number;
+  responseLost?: boolean;
+};
+
 export enum StatusCode {
   Success = 1,
   BusinessLogicGenericError = 2,
   MarshallerError = 3,
   NoMatchForSourceAndDestination = 4,
   NoSuchFlightIdentifier = 5,
-  InsufficientNumberOfAvailableSeats = 6,
+  InsufficientNumberOfAvailableSeats = 6
 }
 
 export enum RequestType {
@@ -19,7 +27,7 @@ export enum RequestType {
   MakeSeatReservationRequestType = 4,
   MonitorSeatUpdatesRequestType = 5,
   UpdateFlightPriceRequestType = 6,
-  CreateFlightRequestType = 7,
+  CreateFlightRequestType = 7
 }
 
 export enum ResponseType {
@@ -30,7 +38,7 @@ export enum ResponseType {
   MonitorSeatUpdatesResponseType = 105,
   UpdateFlightPriceResponseType = 106,
   CreateFlightResponseType = 107,
-  MonitorSeatUpdatesCallbackType = 201,
+  MonitorSeatUpdatesCallbackType = 201
 }
 
 export type GetFlightIdentifiersRequest = {

@@ -1,8 +1,8 @@
-import { UDPClient } from "./Client";
-import { CreateFlightRequest, RequestType } from "./interfaces";
-import { marshal } from "./marshal";
+import { UDPClient } from './Client';
+import { CreateFlightRequest, RequestType } from './interfaces';
+import { marshal } from './marshal';
 
-const ip = process.env.IP || "localhost";
+const ip = process.env.IP || 'localhost';
 
 // Get flight identifier
 export async function getFlightIdentifier(
@@ -11,36 +11,41 @@ export async function getFlightIdentifier(
 ) {
   const payload = marshal({
     SourceLocation: sourceLocation,
-    DestinationLocation: destinationLocation,
+    DestinationLocation: destinationLocation
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(
-      payload,
-      RequestType.GetFlightIdentifiersRequestType,
-      1,
-      1
-    );
-    resolve(client.promise);
+    await client
+      .sendRequests({
+        payload: payload,
+        requestType: RequestType.GetFlightIdentifiersRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    resolve(1);
   });
 }
 
 // Get flight information
 export function getFlightInformation(flightIdentifier: number) {
   const payload = marshal({
-    FlightIdentifier: flightIdentifier,
+    FlightIdentifier: flightIdentifier
   });
 
   return new Promise((resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(
-      payload,
-      RequestType.GetFlightInformationRequestType,
-      1,
-      1
+    resolve(
+      client.sendRequests({
+        payload: payload,
+        requestType: RequestType.GetFlightInformationRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
     );
-    resolve(client.promise);
   });
 }
 
@@ -51,18 +56,22 @@ export function createSeatReservationRequest(
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
-    SeatsToReserve: seatsToReserve,
+    SeatsToReserve: seatsToReserve
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(
-      payload,
-      RequestType.MakeSeatReservationRequestType,
-      1,
-      1
-    );
-    resolve(client.promise);
+    await client
+      .sendRequests({
+        payload: payload,
+        requestType: RequestType.MakeSeatReservationRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    resolve(1);
   });
 }
 
@@ -73,19 +82,24 @@ export function monitorSeatUpdatesCallbackRequest(
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
-    LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds,
+    LengthOfMonitorIntervalInSeconds: lengthOfMonitorIntervalInSeconds
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(
-      payload,
-      RequestType.MonitorSeatUpdatesRequestType,
-      1,
-      1
-    );
-    client.setMonitorTimeout(lengthOfMonitorIntervalInSeconds);
-    resolve(client.promise);
+    client.monitorTimeOut = Number(lengthOfMonitorIntervalInSeconds);
+    await client
+      .sendRequestCallback({
+        payload: payload,
+        requestType: RequestType.MonitorSeatUpdatesRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+
+    resolve(1);
   });
 }
 
@@ -96,41 +110,67 @@ export function updateFlightPriceRequest(
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
-    NewPrice: newPrice,
+    NewPrice: newPrice
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(payload, RequestType.UpdateFlightPriceRequestType, 1, 1);
-    resolve(client.promise);
+    await client
+      .sendRequests({
+        payload: payload,
+        requestType: RequestType.UpdateFlightPriceRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    resolve(1);
   });
 }
 
 // Create Flight Request
 export function createFlightRequest(dto: CreateFlightRequest) {
   const payload = marshal({
-    ...dto,
+    ...dto
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
-    resolve(client.promise);
+    await client
+      .sendRequests({
+        payload: payload,
+        requestType: RequestType.CreateFlightRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    resolve(1);
   });
 }
 
 // Simulate Get Flight Information with request lost from server
 export function createFlightWithRequestLost(dto: CreateFlightRequest) {
   const payload = marshal({
-    ...dto,
+    ...dto
   });
 
   return new Promise((resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    console.log("Sending a packet, will resend in 5 sec...");
-    setTimeout(() => {
-      client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
-      resolve(client.promise);
+    console.log('Sending a packet, will resend in 5 sec...');
+    setTimeout(async () => {
+      await client
+        .sendRequests({
+          payload: payload,
+          requestType: RequestType.CreateFlightRequestType,
+          byteArrayBufferNo: 1,
+          totalByteArrayBuffers: 1
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }, 5000);
   });
 }
@@ -138,19 +178,23 @@ export function createFlightWithRequestLost(dto: CreateFlightRequest) {
 // Simulate Get Flight Information with response lost in client
 export function createFlightWithResponseLost(dto: CreateFlightRequest) {
   const payload = marshal({
-    ...dto,
+    ...dto
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    client.sendRequest(
-      payload,
-      RequestType.CreateFlightRequestType,
-      1,
-      1,
-      true
-    );
-    resolve(client.promise);
+    await client
+      .sendRequests({
+        payload: payload,
+        requestType: RequestType.CreateFlightRequestType,
+        byteArrayBufferNo: 1,
+        totalByteArrayBuffers: 1,
+        responseLost: true
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    resolve(1);
   });
 }
 
@@ -161,20 +205,23 @@ export function updateFlightPriceRequestWithRequestLost(
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
-    NewPrice: newPrice,
+    NewPrice: newPrice
   });
 
   return new Promise((resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    console.log("Sending a packet, will resend in 5 sec...");
-    setTimeout(() => {
-      client.sendRequest(
-        payload,
-        RequestType.UpdateFlightPriceRequestType,
-        1,
-        1
-      );
-      resolve(client.promise);
+    console.log('Sending a packet, will resend in 5 sec...');
+    setTimeout(async () => {
+      await client
+        .sendRequests({
+          payload: payload,
+          requestType: RequestType.UpdateFlightPriceRequestType,
+          byteArrayBufferNo: 1,
+          totalByteArrayBuffers: 1
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }, 5000);
   });
 }
@@ -186,19 +233,24 @@ export function updateFlightPriceRequestWithResponseLost(
 ) {
   const payload = marshal({
     FlightIdentifier: flightIdentifier,
-    NewPrice: newPrice,
+    NewPrice: newPrice
   });
 
   return new Promise((resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    setTimeout(() => {
-      client.sendRequest(
-        payload,
-        RequestType.UpdateFlightPriceRequestType,
-        1,
-        1
-      );
-      resolve(client.promise);
+    console.log('Sending a packet, will resend in 5 sec...');
+    setTimeout(async () => {
+      await client
+        .sendRequests({
+          payload: payload,
+          requestType: RequestType.UpdateFlightPriceRequestType,
+          byteArrayBufferNo: 1,
+          totalByteArrayBuffers: 1,
+          responseLost: true
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }, 5000);
   });
 }

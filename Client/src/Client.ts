@@ -1,13 +1,15 @@
-import dgram from "dgram";
-import { Buffer } from "buffer";
+import dgram from 'dgram';
+import { Buffer } from 'buffer';
 import {
   constructHeaders,
   createRequestId,
-  deconstructHeaders,
-} from "./headers";
-import { ResponseType } from "./interfaces";
-import { unmarshal } from "./unmarshal";
-import { logPacketInformation } from "./utility";
+  deconstructHeaders
+} from './headers';
+import { RequestObj, ResponseType } from './interfaces';
+import { unmarshal } from './unmarshal';
+import { isTimeout, logPacketInformation } from './utility';
+
+const ac = new AbortController();
 
 export class UDPClient {
   address: string;
@@ -17,19 +19,21 @@ export class UDPClient {
   requestId: string;
   timeout: number;
   monitorTimeOut: number;
-  monitorMode: boolean;
-  promise: any;
+  maxRequests: number;
+  reply: boolean;
+  timer: any;
 
   constructor(address: string, sendPort: number) {
     this.address = address; // IP Address of Server
     this.sendPort = sendPort; // Sending Port Number of Client
     this.receivePort = 0; // Client Port is using
-    this.client = dgram.createSocket("udp4");
-    this.requestId = ""; // Tracking of Request ID
+    this.client = dgram.createSocket('udp4');
+    this.requestId = ''; // Tracking of Request ID
     this.timeout = 5000; // Time out when no reply in 0.5 seconds
     this.monitorTimeOut = 0; // Time to set when to stop monitoring
-    this.monitorMode = false; // Whether callback is enable
-    this.promise = null;
+    this.maxRequests = 4;
+    this.reply = false;
+    this.timer = null;
   }
 
   private receiveResponse(buffer: Buffer) {
@@ -44,22 +48,17 @@ export class UDPClient {
     );
     const payload = unmarshal(buffer.subarray(26, 512), header.requestType);
 
-    if (typeof payload === "string") console.log(payload);
+    if (typeof payload === 'string') console.log(payload);
     else return payload;
   }
 
-  public setMonitorTimeout(time: BigInt) {
-    this.monitorTimeOut = Number(time);
-  }
-  //Send Method to cover both Idempotent and Non-Idempotent
-  public async sendRequest(
+  private constructHeaderWithPayload(
     payload: Buffer,
     requestType: number,
     byteArrayBufferNo: number,
-    totalByteArrayBuffers: number,
-    responseLost = false
+    totalByteArrayBuffers: number
   ) {
-    if (this.requestId === "") this.requestId = createRequestId();
+    if (this.requestId === '') this.requestId = createRequestId();
 
     const header = constructHeaders(
       requestType,
@@ -69,10 +68,11 @@ export class UDPClient {
     );
 
     // Converts the message object into array
-    const buffer = Buffer.concat([header, payload], 512);
+    return Buffer.concat([header, payload], 512);
+  }
 
-    this.promise = new Promise((resolve, reject) => {
-      // Send over to server
+  private sendRequest(buffer: Buffer) {
+    return new Promise((resolve, reject) => {
       this.client.send(
         buffer,
         0,
@@ -81,59 +81,98 @@ export class UDPClient {
         this.address,
         (err: Error | null) => {
           if (err) {
-            console.log(`Error sending message: ${err}`);
+            reject(`Error sending message: ${err}`);
           } else {
-            logPacketInformation(
-              this.requestId,
-              byteArrayBufferNo,
-              totalByteArrayBuffers,
-              requestType,
-              payload
-            );
-
-            this.receivePort = this.client.address().port;
-            this.client.on("message", (msg) => {
-              let callback;
-
-              // Simulate response Lost if true
-              if (!responseLost) {
-                clearTimeout(timeOutId);
-
-                callback = this.receiveResponse(
-                  msg
-                ) as ResponseType.MonitorSeatUpdatesResponseType;
-                responseLost = false;
-              }
-
-              // Dealing with callback
-              if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
-                setTimeout(() => {
-                  console.log("No more monitoring");
-                  this.monitorMode = false;
-                  this.client.close();
-                  resolve(1);
-                }, this.monitorTimeOut * 1000);
-                this.monitorMode = true;
-              } else if (!this.monitorMode) {
-                this.client.close();
-                resolve(1);
-              }
-            });
-
-            // Resend if not acknowledgement has been received for 5 secs
-            const timeOutId = setTimeout(() => {
-              this.client = dgram.createSocket("udp4");
-              console.log("No acknowledgement, sending packet again");
-              this.sendRequest(
-                payload,
-                requestType,
-                byteArrayBufferNo,
-                totalByteArrayBuffers
-              );
-            }, this.timeout);
+            resolve('Sent!');
           }
         }
       );
+    });
+  }
+
+  public async sendRequests(requestObj: RequestObj) {
+    this.client.on('message', (msg) => {
+      this.receiveResponse(msg);
+      this.reply = true;
+    });
+
+    const buffer = this.constructHeaderWithPayload(
+      requestObj.payload,
+      requestObj.requestType,
+      requestObj.byteArrayBufferNo,
+      requestObj.totalByteArrayBuffers
+    );
+    return new Promise(async (resolve, reject) => {
+      for (let i = 0; i < this.maxRequests; i++) {
+        if (i > 0)
+          console.log(
+            `No acknowledgement from server, sending ${i} / 3 retries`
+          );
+        logPacketInformation(
+          this.requestId,
+          requestObj.byteArrayBufferNo,
+          requestObj.totalByteArrayBuffers,
+          requestObj.requestType,
+          requestObj.payload
+        );
+
+        await this.sendRequest(buffer);
+        await isTimeout(this.timeout);
+        if (this.reply) {
+          break;
+        }
+      }
+
+      this.client.close();
+      if (this.reply) {
+        resolve(1);
+        this.reply = false;
+      } else reject('Exceeded the requests limit...\n');
+    });
+  }
+
+  public async sendRequestCallback(requestObj: RequestObj) {
+    return new Promise(async (resolve, reject) => {
+      this.client.on('message', (msg) => {
+        const callback = this.receiveResponse(msg);
+        if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
+          this.reply = true;
+          setTimeout(() => {
+            console.log('No more monitoring');
+            this.client.close();
+            resolve(1);
+            this.reply = false;
+          }, this.monitorTimeOut * 1000);
+        }
+      });
+
+      const buffer = this.constructHeaderWithPayload(
+        requestObj.payload,
+        requestObj.requestType,
+        requestObj.byteArrayBufferNo,
+        requestObj.totalByteArrayBuffers
+      );
+      for (let i = 0; i < this.maxRequests; i++) {
+        if (i > 0)
+          console.log(
+            `No acknowledgement from server, sending ${i} / 3 retries`
+          );
+        logPacketInformation(
+          this.requestId,
+          requestObj.byteArrayBufferNo,
+          requestObj.totalByteArrayBuffers,
+          requestObj.requestType,
+          requestObj.payload
+        );
+
+        await this.sendRequest(buffer);
+        await isTimeout(this.timeout);
+        if (this.reply) {
+          console.log('Monitoring now...');
+          break;
+        }
+      }
+      if (!this.reply) reject('Exceeded the requests limit...\n');
     });
   }
 }
