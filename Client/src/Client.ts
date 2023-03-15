@@ -80,7 +80,6 @@ export class UDPClient {
         this.sendPort,
         this.address,
         (err: Error | null) => {
-          console.log(this.client.address());
           if (err) {
             console.log(`Error sending message: ${err}`);
           } else {
