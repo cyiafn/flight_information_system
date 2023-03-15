@@ -1,5 +1,5 @@
 import * as readline from "readline/promises";
-import { stdin as input, stdout as output } from "process";
+import { exit, stdin as input, stdout as output } from "process";
 import {
   createSeatReservationRequest,
   getFlightIdentifier,
@@ -17,7 +17,7 @@ const rl = readline.createInterface({ input, output });
 
 // Text-based UI to select options
 export async function userInterface() {
-  let option = 0;
+  let option: string;
   console.log("-----Hello, Welcome to Flight Information System-----");
   console.log("1. Query Flight Identifier");
   console.log("2. Query Flight Information");
@@ -34,46 +34,48 @@ export async function userInterface() {
     "10. Update the Flight Ticket Price with Response Lost (Idempotent)"
   );
   console.log("Type q to quit.");
-  option = Number(await rl.question("What do you wish to do?\n"));
-  while (option < 1 || option > 10) {
-    option = Number(await rl.question("Wrong Input\n"));
-  }
+  option = await rl.question("What do you wish to do?\n");
+
+  while ((Number(option) < 1 || Number(option) > 10) && option !== "q")
+    option = await rl.question("Wrong Input\n");
+
+  if (option === "q") return "q";
 
   let inputs;
   switch (option) {
-    case 1:
+    case "1":
       inputs = await q1();
       break;
-    case 2:
+    case "2":
       inputs = await q2();
       break;
-    case 3:
+    case "3":
       inputs = await q3();
       break;
-    case 4:
+    case "4":
       inputs = await q4();
       break;
-    case 5:
+    case "5":
       inputs = await q5();
       break;
-    case 6:
+    case "6":
       inputs = await q6();
       break;
-    case 7:
+    case "7":
       inputs = await q7();
       break;
-    case 8:
+    case "8":
       inputs = await q8();
       break;
-    case 9:
+    case "9":
       inputs = await q9();
       break;
-    case 10:
+    case "10":
       inputs = await q10();
       break;
   }
 
-  return String(option);
+  return option;
 }
 
 // Get flight identifier based on source location and destination location
@@ -246,6 +248,7 @@ async function main() {
     input = await userInterface();
   }
   //await userInterface();
+  exit();
 }
 
 // Start of the program

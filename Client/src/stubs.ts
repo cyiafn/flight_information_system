@@ -2,7 +2,7 @@ import { UDPClient } from "./Client";
 import { CreateFlightRequest, RequestType } from "./interfaces";
 import { marshal } from "./marshal";
 
-const client = new UDPClient("127.0.0.1", 8080);
+const ip = process.env.IP || "localhost";
 
 // Get flight identifier
 export async function getFlightIdentifier(
@@ -15,7 +15,7 @@ export async function getFlightIdentifier(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(
       payload,
       RequestType.GetFlightIdentifiersRequestType,
@@ -33,7 +33,7 @@ export function getFlightInformation(flightIdentifier: number) {
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(
       payload,
       RequestType.GetFlightInformationRequestType,
@@ -55,7 +55,7 @@ export function createSeatReservationRequest(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(
       payload,
       RequestType.MakeSeatReservationRequestType,
@@ -77,7 +77,7 @@ export function monitorSeatUpdatesCallbackRequest(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(
       payload,
       RequestType.MonitorSeatUpdatesRequestType,
@@ -100,7 +100,7 @@ export function updateFlightPriceRequest(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(payload, RequestType.UpdateFlightPriceRequestType, 1, 1);
     resolve(client.promise);
   });
@@ -113,7 +113,7 @@ export function createFlightRequest(dto: CreateFlightRequest) {
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
     resolve(client.promise);
   });
@@ -126,7 +126,7 @@ export function createFlightWithRequestLost(dto: CreateFlightRequest) {
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     console.log("Sending a packet, will resend in 5 sec...");
     setTimeout(() => {
       client.sendRequest(payload, RequestType.CreateFlightRequestType, 1, 1);
@@ -142,7 +142,7 @@ export function createFlightWithResponseLost(dto: CreateFlightRequest) {
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     client.sendRequest(
       payload,
       RequestType.CreateFlightRequestType,
@@ -165,7 +165,7 @@ export function updateFlightPriceRequestWithRequestLost(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     console.log("Sending a packet, will resend in 5 sec...");
     setTimeout(() => {
       client.sendRequest(
@@ -190,7 +190,7 @@ export function updateFlightPriceRequestWithResponseLost(
   });
 
   return new Promise((resolve, reject) => {
-    const client = new UDPClient("127.0.0.1", 8080);
+    const client = new UDPClient(ip, 8080);
     setTimeout(() => {
       client.sendRequest(
         payload,
