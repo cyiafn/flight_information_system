@@ -45,7 +45,3 @@ export function clearTimeouts(timeoutArr: any) {
     clearTimeout(timeoutArr[i]);
   }
 }
-
-export function isTimeout(time: number) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}

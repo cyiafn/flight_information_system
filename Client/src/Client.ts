@@ -7,7 +7,7 @@ import {
 } from './headers';
 import { RequestObj, ResponseType } from './interfaces';
 import { unmarshal } from './unmarshal';
-import { isTimeout, logPacketInformation } from './utility';
+import { clearTimeouts, logPacketInformation } from './utility';
 
 const ac = new AbortController();
 
@@ -22,6 +22,7 @@ export class UDPClient {
   retryCnt: number;
   maxRetries: number;
   monitorMode: boolean;
+  timer: any;
 
   constructor(address: string, sendPort: number) {
     this.address = address; // IP Address of Server
@@ -34,6 +35,7 @@ export class UDPClient {
     this.retryCnt = 0;
     this.maxRetries = 3;
     this.monitorMode = false;
+    this.timer = [];
   }
 
   private receiveResponse(buffer: Buffer) {
@@ -89,29 +91,37 @@ export class UDPClient {
             requestObj.payload
           );
           // Set a timer for 5 seconds
-          const timer = setTimeout(() => {
-            console.log('No response received.');
-            if (this.retryCnt < this.maxRetries) {
-              console.log(
-                `Retrying... (attempt ${this.retryCnt + 1} of ${
-                  this.maxRetries
-                })`
-              );
-              this.sendRequest(requestObj, buffer)
-                .then((response) => resolve(response)) // Resolve the promise with the response
-                .catch((err) => reject(err)); // Reject the promise with the error
-            } else {
-              console.log(
-                `Maximum number of retries (${this.maxRetries}) reached. Giving up. \n`
-              );
-              this.client.close();
-              reject(new Error('Maximum number of retries reached')); // Reject the promise with an error message
-            }
-          }, this.timeout);
-          if (!requestObj.responseLost) {
+          this.timer.push(
+            setTimeout(() => {
+              console.log('No response received.');
+              if (this.retryCnt < this.maxRetries) {
+                console.log(
+                  `Retrying... (attempt ${this.retryCnt + 1} of ${
+                    this.maxRetries
+                  })`
+                );
+                this.sendRequest(requestObj, buffer)
+                  .then((response) => resolve(response)) // Resolve the promise with the response
+                  .catch((err) => reject(err)); // Reject the promise with the error
+              } else {
+                console.log('else loop', this.retryCnt);
+                console.log(
+                  `Maximum number of retries (${this.maxRetries}) reached. Giving up. \n`
+                );
+                this.client.close();
+                this.retryCnt = 0;
+                reject(new Error('Maximum number of retries reached')); // Reject the promise with an error message
+              }
+            }, this.timeout)
+          );
+          if (
+            (!requestObj.responseLost && this.retryCnt === 1) ||
+            (requestObj.responseLost && this.retryCnt === 2)
+          ) {
             this.client.on('message', (msg) => {
               const callback = this.receiveResponse(msg);
-              clearTimeout(timer);
+              clearTimeouts(this.timer);
+              this.timer = [];
               if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
                 this.monitorMode = true;
                 console.log(`Callback establised with server.`);

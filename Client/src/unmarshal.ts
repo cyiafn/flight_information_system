@@ -1,6 +1,6 @@
-import { Buffer } from "buffer";
-import { ResponseType, StatusCode } from "./interfaces";
-import { convertToDateTime, findStrFromBuffer } from "./utility";
+import { Buffer } from 'buffer';
+import { ResponseType, StatusCode } from './interfaces';
+import { convertToDateTime, findStrFromBuffer } from './utility';
 
 export function unmarshal(buffer: Buffer, requestType: number) {
   const statusCode = buffer[0];
@@ -8,15 +8,15 @@ export function unmarshal(buffer: Buffer, requestType: number) {
 
   switch (statusCode) {
     case StatusCode.BusinessLogicGenericError:
-      return "Generic Error";
+      return 'Generic Error';
     case StatusCode.MarshallerError:
-      return "Marshal Error";
+      return 'Marshal Error';
     case StatusCode.NoMatchForSourceAndDestination:
-      return "No match for source and destination";
+      return 'No match for source and destination';
     case StatusCode.NoSuchFlightIdentifier:
-      return "No flight identifier";
+      return 'No flight identifier';
     case StatusCode.InsufficientNumberOfAvailableSeats:
-      return "Insufficient number of available seats";
+      return 'Insufficient number of available seats';
     case StatusCode.Success:
       return determineResponseType(data, requestType);
   }
@@ -29,7 +29,7 @@ function determineResponseType(buffer: Buffer, responseType: number) {
 
   switch (responseType) {
     case ResponseType.PingResponseType:
-      console.log("PONG");
+      console.log('PONG');
       break;
 
     case ResponseType.GetFlightIdentifiersResponseType:
@@ -44,7 +44,7 @@ function determineResponseType(buffer: Buffer, responseType: number) {
         `These are the following Flight Identifier(s) from the given Source and Destination Location:`
       );
 
-      let resultStr = "";
+      let resultStr = '';
       for (const [idx, id] of flightIds.entries()) {
         if (idx === flightIds.length - 1) resultStr += `${id}`;
         else resultStr += `${id}, `;
@@ -69,7 +69,7 @@ function determineResponseType(buffer: Buffer, responseType: number) {
 
     case ResponseType.MakeSeatReservationResponseType:
       // No Response Body
-      console.log("Seats have been successfully reserved");
+      console.log('Seats have been successfully reserved');
       break;
 
     case ResponseType.MonitorSeatUpdatesResponseType:
@@ -117,4 +117,5 @@ function determineResponseType(buffer: Buffer, responseType: number) {
       );
       break;
   }
+  console.log('\n');
 }

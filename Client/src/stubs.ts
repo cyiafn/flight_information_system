@@ -146,6 +146,7 @@ export function createFlightWithRequestLost(dto: CreateFlightRequest) {
         byteArrayBufferNo: 1,
         totalByteArrayBuffers: 1
       });
+      resolve(1);
     }, 5000);
   });
 }
@@ -189,6 +190,7 @@ export function updateFlightPriceRequestWithRequestLost(
         byteArrayBufferNo: 1,
         totalByteArrayBuffers: 1
       });
+      resolve(1);
     }, 5000);
   });
 }
@@ -203,17 +205,15 @@ export function updateFlightPriceRequestWithResponseLost(
     NewPrice: newPrice
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    console.log('Sending a packet, will resend in 5 sec...');
-    setTimeout(async () => {
-      await client.sendRequests({
-        payload: payload,
-        requestType: RequestType.UpdateFlightPriceRequestType,
-        byteArrayBufferNo: 1,
-        totalByteArrayBuffers: 1,
-        responseLost: true
-      });
-    }, 5000);
+    await client.sendRequests({
+      payload: payload,
+      requestType: RequestType.UpdateFlightPriceRequestType,
+      byteArrayBufferNo: 1,
+      totalByteArrayBuffers: 1,
+      responseLost: true
+    });
+    resolve(1);
   });
 }
