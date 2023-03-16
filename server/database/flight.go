@@ -4,6 +4,8 @@ import "github.com/cyiafn/flight_information_system/server/dao"
 
 /*
 Note: Query is a linear scan, it is not efficient, but this is not the focus of this project
+
+Note that this "database" is not fully concurrent-safe, usually this is delegated to the actual database.
 */
 
 // flights is our in-memory "db" to store flights
