@@ -21,6 +21,7 @@ export class UDPClient {
   monitorTimeOut: number;
   retryCnt: number;
   maxRetries: number;
+  monitorMode: boolean;
 
   constructor(address: string, sendPort: number) {
     this.address = address; // IP Address of Server
@@ -32,6 +33,7 @@ export class UDPClient {
     this.monitorTimeOut = 0; // Time to set when to stop monitoring
     this.retryCnt = 0;
     this.maxRetries = 3;
+    this.monitorMode = false;
   }
 
   private receiveResponse(buffer: Buffer) {
@@ -106,12 +108,24 @@ export class UDPClient {
               reject(new Error('Maximum number of retries reached')); // Reject the promise with an error message
             }
           }, this.timeout);
-
-          this.client.on('message', (msg) => {
-            this.receiveResponse(msg);
-            clearTimeout(timer);
-            resolve(1);
-          });
+          if (!requestObj.responseLost) {
+            this.client.on('message', (msg) => {
+              const callback = this.receiveResponse(msg);
+              clearTimeout(timer);
+              if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
+                this.monitorMode = true;
+                console.log(`Callback establised with server.`);
+                const callbackTimer = setTimeout(() => {
+                  console.log('Monitoring has expired...\n\n');
+                  this.monitorMode = false;
+                  resolve(1);
+                  this.client.close();
+                }, this.monitorTimeOut * 1000);
+              } else if (!this.monitorMode) {
+                resolve(1);
+              }
+            });
+          }
         }
       });
     });
@@ -126,56 +140,12 @@ export class UDPClient {
     );
     return new Promise(async (resolve, reject) => {
       try {
-        await this.sendRequest(requestObj, buffer).catch();
+        await this.sendRequest(requestObj, buffer);
       } catch (e: any) {
         console.log(`Error: ${e.message} \n\n`);
       } finally {
         resolve(1);
       }
-    });
-  }
-
-  public async sendRequestCallback(requestObj: RequestObj) {
-    return new Promise(async (resolve, reject) => {
-      this.client.on('message', (msg) => {
-        const callback = this.receiveResponse(msg);
-        if (callback === ResponseType.MonitorSeatUpdatesResponseType) {
-          this.reply = true;
-          setTimeout(() => {
-            console.log('No more monitoring');
-            this.client.close();
-            resolve(1);
-            this.reply = false;
-          }, this.monitorTimeOut * 1000);
-        }
-      });
-
-      const buffer = this.constructHeaderWithPayload(
-        requestObj.payload,
-        requestObj.requestType,
-        requestObj.byteArrayBufferNo,
-        requestObj.totalByteArrayBuffers
-      );
-      for (let i = 0; i < this.maxRetries; i++) {
-        if (i > 0)
-          console.log(
-            `No acknowledgement from server, sending ${i} / 3 retries`
-          );
-        logPacketInformation(
-          this.requestId,
-          requestObj.byteArrayBufferNo,
-          requestObj.totalByteArrayBuffers,
-          requestObj.requestType,
-          requestObj.payload
-        );
-
-        await isTimeout(this.timeout);
-        if (this.reply) {
-          console.log('Monitoring now...');
-          break;
-        }
-      }
-      if (!this.reply) reject('Exceeded the requests limit...\n');
     });
   }
 }
