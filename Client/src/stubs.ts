@@ -16,16 +16,12 @@ export async function getFlightIdentifier(
 
   return new Promise(async (resolve, reject) => {
     const client = new UDPClient(ip, 8080);
-    await client
-      .sendRequests({
-        payload: payload,
-        requestType: RequestType.GetFlightIdentifiersRequestType,
-        byteArrayBufferNo: 1,
-        totalByteArrayBuffers: 1
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    await client.sendRequests({
+      payload: payload,
+      requestType: RequestType.GetFlightIdentifiersRequestType,
+      byteArrayBufferNo: 1,
+      totalByteArrayBuffers: 1
+    });
     resolve(1);
   });
 }

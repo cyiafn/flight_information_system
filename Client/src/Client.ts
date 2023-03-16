@@ -19,9 +19,8 @@ export class UDPClient {
   requestId: string;
   timeout: number;
   monitorTimeOut: number;
-  maxRequests: number;
-  reply: boolean;
-  timer: any;
+  retryCnt: number;
+  maxRetries: number;
 
   constructor(address: string, sendPort: number) {
     this.address = address; // IP Address of Server
@@ -31,9 +30,8 @@ export class UDPClient {
     this.requestId = ''; // Tracking of Request ID
     this.timeout = 5000; // Time out when no reply in 0.5 seconds
     this.monitorTimeOut = 0; // Time to set when to stop monitoring
-    this.maxRequests = 4;
-    this.reply = false;
-    this.timer = null;
+    this.retryCnt = 0;
+    this.maxRetries = 3;
   }
 
   private receiveResponse(buffer: Buffer) {
@@ -71,31 +69,55 @@ export class UDPClient {
     return Buffer.concat([header, payload], 512);
   }
 
-  private sendRequest(buffer: Buffer) {
+  private sendRequest(requestObj: RequestObj, buffer: Buffer) {
     return new Promise((resolve, reject) => {
-      this.client.send(
-        buffer,
-        0,
-        buffer.length,
-        this.sendPort,
-        this.address,
-        (err: Error | null) => {
-          if (err) {
-            reject(`Error sending message: ${err}`);
-          } else {
-            resolve('Sent!');
-          }
+      this.retryCnt++; // Increment the retry counter
+      this.client.send(buffer, this.sendPort, this.address, (err) => {
+        if (err) {
+          console.log(`Error sending message: ${err}`);
+          this.client.close();
+          reject(err); // Reject the promise with the error
+        } else {
+          // Log information
+          logPacketInformation(
+            this.requestId,
+            requestObj.byteArrayBufferNo,
+            requestObj.totalByteArrayBuffers,
+            requestObj.requestType,
+            requestObj.payload
+          );
+          // Set a timer for 5 seconds
+          const timer = setTimeout(() => {
+            console.log('No response received.');
+            if (this.retryCnt < this.maxRetries) {
+              console.log(
+                `Retrying... (attempt ${this.retryCnt + 1} of ${
+                  this.maxRetries
+                })`
+              );
+              this.sendRequest(requestObj, buffer)
+                .then((response) => resolve(response)) // Resolve the promise with the response
+                .catch((err) => reject(err)); // Reject the promise with the error
+            } else {
+              console.log(
+                `Maximum number of retries (${this.maxRetries}) reached. Giving up. \n`
+              );
+              this.client.close();
+              reject(new Error('Maximum number of retries reached')); // Reject the promise with an error message
+            }
+          }, this.timeout);
+
+          this.client.on('message', (msg) => {
+            this.receiveResponse(msg);
+            clearTimeout(timer);
+            resolve(1);
+          });
         }
-      );
+      });
     });
   }
 
-  public async sendRequests(requestObj: RequestObj) {
-    this.client.on('message', (msg) => {
-      this.receiveResponse(msg);
-      this.reply = true;
-    });
-
+  public sendRequests(requestObj: RequestObj) {
     const buffer = this.constructHeaderWithPayload(
       requestObj.payload,
       requestObj.requestType,
@@ -103,31 +125,13 @@ export class UDPClient {
       requestObj.totalByteArrayBuffers
     );
     return new Promise(async (resolve, reject) => {
-      for (let i = 0; i < this.maxRequests; i++) {
-        if (i > 0)
-          console.log(
-            `No acknowledgement from server, sending ${i} / 3 retries`
-          );
-        logPacketInformation(
-          this.requestId,
-          requestObj.byteArrayBufferNo,
-          requestObj.totalByteArrayBuffers,
-          requestObj.requestType,
-          requestObj.payload
-        );
-
-        await this.sendRequest(buffer);
-        await isTimeout(this.timeout);
-        if (this.reply) {
-          break;
-        }
-      }
-
-      this.client.close();
-      if (this.reply) {
+      try {
+        await this.sendRequest(requestObj, buffer).catch();
+      } catch (e: any) {
+        console.log(`Error: ${e.message} \n\n`);
+      } finally {
         resolve(1);
-        this.reply = false;
-      } else reject('Exceeded the requests limit...\n');
+      }
     });
   }
 
@@ -152,7 +156,7 @@ export class UDPClient {
         requestObj.byteArrayBufferNo,
         requestObj.totalByteArrayBuffers
       );
-      for (let i = 0; i < this.maxRequests; i++) {
+      for (let i = 0; i < this.maxRetries; i++) {
         if (i > 0)
           console.log(
             `No acknowledgement from server, sending ${i} / 3 retries`
@@ -165,7 +169,6 @@ export class UDPClient {
           requestObj.payload
         );
 
-        await this.sendRequest(buffer);
         await isTimeout(this.timeout);
         if (this.reply) {
           console.log('Monitoring now...');
