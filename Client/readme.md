@@ -3,6 +3,9 @@
 - Ensure that you have the latest node.js version 19.8.0 
 
 ## How to run the Client
-- npm install the packages in the client folder
-- An instance of the client programme will run on the commandlin
-- Select the options in the commandline
+- Install [Nodejs LTS](https://nodejs.org/en/download)
+- Clone this repo
+- Go to the client directory
+- ```npm install``` the packages
+- ```ts-node ./src/userInterface.ts``` will be the entry point of the program
+- Choose your options or press q to exit
